@@ -11,6 +11,8 @@ A public collection of scripts and configuration for customising [Claude Code](h
 
 Both scripts display: model name, working directory, git branch, context window usage bar, and Anthropic API usage limits (5-hour and 7-day) with colour-coded percentages and reset countdowns.
 
+![Statusline screenshot](screenshot.png)
+
 ### Quick Install
 
 Copy and paste one of the prompts below directly into Claude Code to install the statusline automatically.
