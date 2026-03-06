@@ -1,0 +1,7 @@
+{
+  "name": "security-review",
+  "description": "Comprehensive security review plugin that auto-detects project type and launches parallel security analysis agents across relevant attack surface categories",
+  "author": {
+    "name": "Geoffrey Rich"
+  }
+}
