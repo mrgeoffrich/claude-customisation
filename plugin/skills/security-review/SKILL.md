@@ -1,15 +1,12 @@
 ---
-description: Comprehensive security review with auto-detected project type and parallel analysis agents
-argument-hint: [scope or focus area]
+name: security-review
+description: >
+  Comprehensive security review of a codebase. Use this skill whenever the user asks for a security audit, security review, vulnerability scan, security assessment, penetration test prep, threat modeling, OWASP check, or wants to find security issues, bugs, or vulnerabilities in their code. Also trigger when the user asks about secrets exposure, injection risks, authentication issues, or says things like "is this code secure?", "check for vulnerabilities", "review security", or "find security problems".
 ---
 
 # Security Review
 
 Perform a comprehensive security review of the current codebase. Auto-detect the project type and launch parallel security analysis agents covering all relevant attack surface categories.
-
-## User Request
-
-$ARGUMENTS
 
 ## Phase 1: Project Detection & Scoping
 
@@ -22,7 +19,7 @@ $ARGUMENTS
    - Config files: `CLAUDE.md`, `AGENTS.md`, `.env.example`, `docker-compose.yml`, `Dockerfile`
    - Entry points: `src/main.*`, `src/index.*`, `src/app.*`, `main.*`
    - Framework indicators: `next.config.*`, `vite.config.*`, `angular.json`, `manage.py`, `Rocket.toml`
-3. Classify the project into one or more types:
+3. Classify the project into one or many types:
    - **Web Application** (frontend): React, Vue, Angular, Svelte, Next.js, static sites
    - **API / Backend**: REST, GraphQL, gRPC servers; Express, FastAPI, Actix, Gin, Rails
    - **CLI Tool**: Command-line applications, shell utilities

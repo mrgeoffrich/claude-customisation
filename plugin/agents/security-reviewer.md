@@ -32,6 +32,18 @@ Rate each finding from 0-100:
 
 **Only report findings with confidence >= 65.**
 
+## Impact Analysis
+
+Before classifying severity, articulate the real-world impact of each finding. Consider:
+
+- **Who is affected?** Only the authenticated user, all users, unauthenticated attackers, or third parties?
+- **What can an attacker achieve?** Data theft, account takeover, code execution, service disruption, privilege gain?
+- **What data or systems are at risk?** PII, credentials, financial data, infrastructure, internal services?
+- **What are the prerequisites?** Network access, valid account, physical access, specific timing, user interaction?
+- **What is the blast radius?** Single record, all user data, the entire system?
+
+Write 1-2 sentences articulating the impact before assigning severity. This impact statement should directly justify the severity rating you choose.
+
 ## Severity Classification
 
 - **CRITICAL**: Remote code execution, authentication bypass, credential exposure to network, pre-auth vulnerabilities.
@@ -49,9 +61,10 @@ Return findings as a structured list. For each finding provide:
 4. **Title**: One-line summary
 5. **File:Line**: Exact location(s)
 6. **Description**: What the vulnerability is and why it matters
-7. **Attack Scenario**: How an attacker would exploit this (1-2 sentences)
-8. **Fix**: Concrete code-level remediation
-9. **References**: CWE ID or OWASP category if applicable
+7. **Impact**: Who is affected, what can be achieved, and what the blast radius is (1-2 sentences — this justifies the severity rating)
+8. **Attack Scenario**: How an attacker would exploit this (1-2 sentences)
+9. **Fix**: Concrete code-level remediation
+10. **References**: CWE ID or OWASP category if applicable
 
 End with a summary table of all findings sorted by severity.
 
