@@ -1,0 +1,41 @@
+{
+  "skill_name": "achievements",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "/achievements",
+      "expected_output": "Shows achievement progress with beginner and intermediate tiers, unlocked/locked status, and hints",
+      "files": [],
+      "expectations": [
+        "Output contains 'Achievement Progress'",
+        "Output contains 'Beginner' tier section",
+        "Output contains 'Intermediate' tier section",
+        "Locked achievements show hints",
+        "Progress bar is displayed"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What should I try next in Claude Code?",
+      "expected_output": "Suggests next achievements to try based on current progress, with concrete examples",
+      "files": [],
+      "expectations": [
+        "Triggers achievements skill automatically",
+        "Suggests specific features to try",
+        "Gives concrete example prompts the user could type",
+        "Focuses on current tier before advancing"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "How do I get started with Claude Code?",
+      "expected_output": "Shows beginner achievements as a learning path",
+      "files": [],
+      "expectations": [
+        "Triggers achievements skill automatically",
+        "Emphasizes beginner tier achievements",
+        "Provides actionable next steps"
+      ]
+    }
+  ]
+}

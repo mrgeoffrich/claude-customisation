@@ -1,0 +1,41 @@
+{
+  "name": "onboarding",
+  "version": "0.1.0",
+  "description": "Achievement-based onboarding system that guides users through Claude Code features from beginner to advanced via unlockable achievements",
+  "author": {
+    "name": "Geoffrey Rich"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/achievements/scripts/achievement-tracker.py\" session-start"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read|Edit|Write|Bash|Grep|Glob|WebSearch|WebFetch|Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/achievements/scripts/achievement-tracker.py\" tool-use"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/achievements/scripts/achievement-tracker.py\" stop"
+          }
+        ]
+      }
+    ]
+  }
+}

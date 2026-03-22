@@ -42,6 +42,15 @@
       "author": {
         "name": "Geoffrey Rich"
       }
+    },
+    {
+      "name": "onboarding",
+      "source": "./plugins/onboarding",
+      "description": "Achievement-based onboarding system that guides users through Claude Code features",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
     }
   ]
 }
