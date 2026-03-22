@@ -1,5 +1,5 @@
 {
-  "name": "sandbox",
+  "name": "cc-sandbox",
   "version": "0.1.0",
   "description": "Launch Claude Code in isolated Docker sandboxes with --dangerously-skip-permissions enabled safely",
   "author": {
