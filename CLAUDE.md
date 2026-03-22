@@ -51,9 +51,9 @@ The YAML frontmatter controls how and when a skill is invoked:
 /plugin install <name>@mrgeoffrich
 ```
 
-## Statusline scripts
+## Statusline
 
-`statusline.sh` (Bash) and `statusline.ps1` (PowerShell) display model name, git branch, context window usage bar, and Anthropic API usage limits in Claude Code's status line. They cache API calls for 2 minutes at `/tmp/claude-usage-cache.json`. Installation instructions are in `README.md`.
+The `statusline` skill (in `dev-setup`) installs a cross-platform Python 3 script (`statusline.py`) to `~/.claude/` and configures Claude Code's status line. It displays model name, git branch, context window usage bar, and Anthropic API usage limits (5-hour and 7-day) with reset countdowns.
 
 ## Skill quality standards
 

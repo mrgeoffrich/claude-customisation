@@ -8,14 +8,36 @@
   },
   "plugins": [
     {
-      "name": "claude-customisation",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/mrgeoffrich/claude-customisation.git",
-        "path": "plugin",
-        "ref": "main"
-      },
-      "description": "Skills for security review, Next.js scaffolding, Gmail composition, and CLI tool tips",
+      "name": "security",
+      "source": "./plugins/security",
+      "description": "Comprehensive security review skills for auditing codebases",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
+    },
+    {
+      "name": "web-dev",
+      "source": "./plugins/web-dev",
+      "description": "Web development skills for scaffolding and building web applications",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
+    },
+    {
+      "name": "gws-skills",
+      "source": "./plugins/gws-skills",
+      "description": "Google Workspace skills for Gmail, Drive, Calendar, and more",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
+    },
+    {
+      "name": "dev-setup",
+      "source": "./plugins/dev-setup",
+      "description": "Developer setup and CLI tool recommendations",
       "version": "0.1.0",
       "author": {
         "name": "Geoffrey Rich"
