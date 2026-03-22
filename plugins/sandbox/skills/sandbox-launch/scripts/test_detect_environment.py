@@ -168,31 +168,64 @@ def test_detect_sandbox_available_but_empty():
 # ---------------------------------------------------------------------------
 
 
-def test_detect_credentials_all_set():
+def test_detect_credentials_all_set(tmp_path):
+    # Create a fake shell profile with the token
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    (fake_home / ".zshrc").write_text("export GH_TOKEN=ghp-test\n")
     env = {"ANTHROPIC_API_KEY": "sk-test", "GITHUB_TOKEN": "ghp-test"}
-    with patch.dict(os.environ, env, clear=False):
+    with patch.dict(os.environ, env, clear=False), patch.object(
+        Path, "home", return_value=fake_home
+    ):
         info = detect_credentials()
     assert info["api_key_set"] is True
     assert info["github_token_set"] is True
+    assert info["github_token_in_profile"] is True
 
 
-def test_detect_credentials_none_set():
+def test_detect_credentials_none_set(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
     env = os.environ.copy()
     env.pop("ANTHROPIC_API_KEY", None)
     env.pop("GITHUB_TOKEN", None)
     env.pop("GH_TOKEN", None)
-    with patch.dict(os.environ, env, clear=True):
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
         info = detect_credentials()
     assert info["api_key_set"] is False
     assert info["github_token_set"] is False
+    assert info["github_token_in_profile"] is False
 
 
-def test_detect_credentials_gh_token_fallback():
+def test_detect_credentials_gh_token_fallback(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
     env = {"GH_TOKEN": "ghp-test"}
-    with patch.dict(os.environ, env, clear=True):
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
         info = detect_credentials()
     assert info["api_key_set"] is False
     assert info["github_token_set"] is True
+    assert info["github_token_in_profile"] is False
+
+
+def test_detect_credentials_in_profile_but_not_env(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    (fake_home / ".bashrc").write_text("export GITHUB_TOKEN=ghp-test\n")
+    env = os.environ.copy()
+    env.pop("ANTHROPIC_API_KEY", None)
+    env.pop("GITHUB_TOKEN", None)
+    env.pop("GH_TOKEN", None)
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        info = detect_credentials()
+    assert info["github_token_set"] is False
+    assert info["github_token_in_profile"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -277,6 +310,7 @@ def test_main_output_format(capsys, tmp_path, monkeypatch):
     assert "docker_installed" in keys
     assert "sandbox_available" in keys
     assert "api_key_set" in keys
+    assert "github_token_in_profile" in keys
     assert "package_managers" in keys
 
     # Booleans should be lowercase strings

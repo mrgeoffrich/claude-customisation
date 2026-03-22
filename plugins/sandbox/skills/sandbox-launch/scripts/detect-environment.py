@@ -65,12 +65,32 @@ def detect_sandbox() -> dict:
     return info
 
 
+def _token_in_shell_profile(token_name: str) -> bool:
+    """Check if a token is exported in the user's shell profile."""
+    home = Path.home()
+    for rc in (".zshrc", ".bashrc", ".bash_profile", ".profile"):
+        rc_path = home / rc
+        if rc_path.is_file():
+            try:
+                content = rc_path.read_text()
+                if f"export {token_name}=" in content:
+                    return True
+            except OSError:
+                continue
+    return False
+
+
 def detect_credentials() -> dict:
+    gh_token_env = bool(
+        os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    )
+    gh_token_profile = _token_in_shell_profile(
+        "GH_TOKEN"
+    ) or _token_in_shell_profile("GITHUB_TOKEN")
     return {
         "api_key_set": bool(os.environ.get("ANTHROPIC_API_KEY")),
-        "github_token_set": bool(
-            os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-        ),
+        "github_token_set": gh_token_env,
+        "github_token_in_profile": gh_token_profile,
     }
 
 

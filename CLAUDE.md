@@ -56,6 +56,14 @@ The YAML frontmatter controls how and when a skill is invoked:
 
 The `statusline` skill (in `dev-setup`) installs a cross-platform Python 3 script (`statusline.py`) to `~/.claude/` and configures Claude Code's status line. It displays model name, git branch, context window usage bar, and Anthropic API usage limits (5-hour and 7-day) with reset countdowns.
 
+## Running tests
+
+Use the project `.venv` for running Python tests:
+
+```bash
+.venv/bin/python3 -m pytest <test-file> -v
+```
+
 ## Skill quality standards
 
 - `description` fields must be precise enough to trigger reliably without false positives — they are the primary routing mechanism

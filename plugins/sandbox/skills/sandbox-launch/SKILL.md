@@ -17,9 +17,13 @@ metadata:
 
 # Launch Claude Code in a Docker Sandbox
 
-Set up and launch Claude Code in a Docker Desktop Sandbox — a microVM with its own Linux kernel
-where `--dangerously-skip-permissions` is enabled by default. The sandbox provides filesystem and
-network isolation so Claude can operate autonomously without risking your host system.
+Set up and launch Claude Code in a Docker Desktop Sandbox — a microVM with its own Linux kernel.
+The sandbox provides filesystem and network isolation so Claude can operate autonomously without
+risking your host system. A post-launch setup script configures the sandbox with:
+- A `yolo` alias that runs `claude --dangerously-skip-permissions`
+- `bypassPermissions` mode in Claude Code settings
+- Automatic `cd` to the project directory on shell entry
+- Starship prompt (if the host has `~/.config/starship.toml`)
 
 Requires Docker Desktop 4.58+.
 
@@ -47,9 +51,13 @@ eliminate permission prompts. Do not proceed further without Docker Sandboxes.
 
 Present what the sandbox will do and ask the user to confirm before proceeding:
 - A microVM will be created with its own kernel and private Docker daemon
-- `--dangerously-skip-permissions` is enabled by default
 - Files sync bidirectionally at the same absolute path
-- Credentials are injected via proxy (never stored in the VM)
+- Credentials (Claude account, GitHub token) are injected via proxy (never stored in the VM)
+- A setup script will configure the sandbox with:
+  - `yolo` alias → `claude --dangerously-skip-permissions`
+  - `bypassPermissions` mode in Claude Code settings (suppresses permission prompts)
+  - Auto-`cd` to the project directory when shelling in
+  - Starship prompt with the host's config (if `~/.config/starship.toml` exists)
 
 ## Phase 3 — Launch
 
@@ -71,9 +79,22 @@ Docker enforces one sandbox per directory.
 Claude account credentials are automatically proxied into the sandbox by Docker Desktop —
 no `ANTHROPIC_API_KEY` is required.
 
-If `github_token_set=false`, mention that `GITHUB_TOKEN` or `GH_TOKEN` should be set for
-`gh` CLI and `git push` to work inside the sandbox. The token is injected via proxy and
-never stored inside the sandbox VM.
+If `github_token_set=false`, warn the user that `GH_TOKEN` (or `GITHUB_TOKEN`) must be set
+for `gh` CLI and `git push` to work inside the sandbox.
+
+If `github_token_in_profile=false` but `github_token_set=true`, warn the user that the
+token is in their current session but **not** in their shell profile — the Docker Desktop
+daemon won't pick it up. They need to add it to `~/.zshrc` or `~/.bashrc`.
+
+Important details for GitHub token setup:
+- The token must be exported in the shell profile (`~/.zshrc` or `~/.bashrc`), not just the
+  current session — the Docker Desktop daemon reads env vars at startup, not from the
+  active terminal
+- Docker Desktop must be **restarted** after adding the token (quit fully and relaunch)
+- If a sandbox was already created before the token was set, it must be removed and
+  recreated (`docker sandbox rm` then `docker sandbox run`) for the credential proxy to
+  pick it up
+- The token is injected via proxy and never stored inside the sandbox VM
 
 ### Step 3 — Launch
 
@@ -84,43 +105,115 @@ docker sandbox run claude "$(pwd)"
 This launches Claude Code in a microVM with bidirectional file sync. Files appear at the same
 absolute path inside the sandbox.
 
+### Step 3.5 — Run setup script
+
+After the sandbox is created, run the setup script inside it to configure the environment.
+
+**Starship prompt**: Check if `~/.config/starship.toml` exists on the host. If it does, copy
+it into the project directory (which is synced into the sandbox) so the setup script can
+detect and install Starship:
+
+```bash
+cp ~/.config/starship.toml <project_dir>/.starship.toml
+```
+
+The staged file is cleaned up automatically after setup. If network isolation is enabled,
+ensure `starship.rs` and `*.starship.rs` are in the allowlist before running setup (the
+install script downloads from `starship.rs` and the binary from `github.com`).
+
+**Run the setup script**:
+
+```bash
+docker sandbox exec <sandbox-name> bash -c "bash <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.sh <project_dir>"
+```
+
+The `setup-sandbox.sh` script configures:
+1. **Working directory** — appends `cd <project_dir>` to `.bashrc` so `docker sandbox exec`
+   sessions land in the project folder, not the workspace root
+2. **`yolo` alias** — `alias yolo='claude --dangerously-skip-permissions'` so the user can
+   type `yolo` to launch Claude Code with all permissions bypassed
+3. **Claude Code permissions** — writes `bypassPermissions` mode and
+   `skipDangerousModePermissionPrompt: true` to `~/.claude/settings.json` inside the sandbox
+4. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
+   copies the config to `~/.config/starship.toml`, adds PATH and `eval "$(starship init bash)"`
+   to `.bashrc`, then removes the staged file
+
+The script is idempotent — it checks for markers before appending to `.bashrc` and merges
+into existing `settings.json` if present.
+
 ### Step 4 — Configure network (optional)
 
 Ask the user if they want strict network isolation (deny-by-default). If yes, use the detected
 package managers to build an allowlist. Read `${CLAUDE_SKILL_DIR}/references/network-allowlist.md`
 for the domain mapping table.
 
-Example for a Node.js project with GitHub:
+Always include these infrastructure domains:
 ```bash
 docker sandbox network proxy <sandbox-name> \
   --policy deny \
   --allow-host "api.anthropic.com" \
   --allow-host "statsig.anthropic.com" \
+  --allow-host "statsig.com" \
   --allow-host "sentry.io" \
-  --allow-host "registry.npmjs.org" \
-  --allow-host "*.npmjs.org" \
+  --allow-host "mcp-proxy.anthropic.com" \
   --allow-host "github.com" \
   --allow-host "*.github.com" \
-  --allow-host "*.githubusercontent.com"
+  --allow-host "*.githubusercontent.com" \
+  --allow-host "docker.io" \
+  --allow-host "*.docker.io"
 ```
 
+Add Starship download domains if the setup script will install Starship:
+```bash
+  --allow-host "starship.rs" \
+  --allow-host "*.starship.rs"
+```
+
+Add web search domains if Claude should be able to search the web inside the sandbox:
+```bash
+  --allow-host "google.com" \
+  --allow-host "www.google.com" \
+  --allow-host "stackoverflow.com" \
+  --allow-host "*.stackoverflow.com"
+```
+
+Then add package manager domains based on the detected package managers — refer to
+`${CLAUDE_SKILL_DIR}/references/network-allowlist.md` for the domain mapping table.
+
 Also ask whether the project calls any external APIs and add those domains.
+
+Additional domains can be added later without recreating the sandbox:
+```bash
+docker sandbox network proxy <sandbox-name> --allow-host "example.com"
+```
+
+Use `docker sandbox network log` to monitor allowed and blocked traffic and identify any
+missing domains.
 
 ### Step 5 — Summary
 
 Tell the user what is now running and how to manage it:
 
-- The sandbox is running with `--dangerously-skip-permissions` enabled
 - Files sync bidirectionally — changes inside the sandbox appear on the host
 - Credentials are injected via proxy (never stored in the VM)
 - The sandbox has its own Docker daemon for building/running containers
+- Type `yolo` inside the sandbox to launch Claude with `--dangerously-skip-permissions`
+- Shell sessions auto-`cd` to the project directory
+- Starship prompt is configured (if the host had `~/.config/starship.toml`)
 
 Key commands:
 - `docker sandbox ls` — list sandboxes
-- `docker sandbox exec -it <name> bash` — shell in alongside Claude
+- `docker sandbox exec -it <name> bash` — shell into the sandbox
 - `docker sandbox stop <name>` — stop (preserves state)
 - `docker sandbox rm <name>` — destroy (workspace files preserved on host)
-- `docker sandbox network log` — monitor network activity
+- `docker sandbox network log` — monitor allowed/blocked network traffic
+
+End by showing the user the exact command to shell into their sandbox:
+
+```
+To shell into your sandbox, run:
+  docker sandbox exec -it <sandbox-name> bash
+```
 
 ## Custom templates (advanced)
 
