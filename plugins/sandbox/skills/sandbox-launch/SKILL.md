@@ -122,16 +122,30 @@ The staged file is cleaned up automatically after setup. If network isolation is
 ensure `starship.rs` and `*.starship.rs` are in the allowlist before running setup (the
 install script downloads from `starship.rs` and the binary from `github.com`).
 
+**Stage the setup script** — copy it into the project directory (which is synced into the
+sandbox) so it's accessible inside the VM. `${CLAUDE_SKILL_DIR}` resolves to a host path
+outside the synced directory, so the script must be staged like `.starship.toml`:
+
+```bash
+cp ${CLAUDE_SKILL_DIR}/scripts/setup-sandbox.py <project_dir>/.setup-sandbox.py
+```
+
 **Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
 sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM).
 If `ls_colors=true` was detected, also pass `SANDBOX_LS_COLORS=1` so the setup script
 enables colored `ls` output inside the sandbox:
 
 ```bash
-docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir> <sandbox-name>
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
 ```
 
 Only include `-e SANDBOX_LS_COLORS="1"` if `ls_colors=true` in the detection output.
+
+**Clean up** — remove the staged script from the project directory after setup completes:
+
+```bash
+rm -f <project_dir>/.setup-sandbox.py
+```
 
 The `setup-sandbox.py` script configures:
 1. **Working directory** — appends `cd <project_dir>` to `.bashrc` so `docker sandbox exec`
