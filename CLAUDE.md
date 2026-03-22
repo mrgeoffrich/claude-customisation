@@ -64,6 +64,12 @@ Use the project `.venv` for running Python tests:
 .venv/bin/python3 -m pytest <test-file> -v
 ```
 
+## Scripting standards
+
+- **All scripts must be written in Python 3** (stdlib only where possible) — no Bash scripts
+- Scripts must work **cross-platform** (macOS, Linux, Windows) — use `pathlib`, `os.path`, and `platform` instead of platform-specific commands or paths
+- Avoid shell-isms like `~`, `$HOME`, or hardcoded `/usr/bin` paths — use `Path.home()`, `os.environ`, and `shutil.which()`
+
 ## Skill quality standards
 
 - `description` fields must be precise enough to trigger reliably without false positives — they are the primary routing mechanism

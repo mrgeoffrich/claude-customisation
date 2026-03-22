@@ -20,6 +20,13 @@ Always include these Claude Code infrastructure domains regardless of project ty
 - `statsig.anthropic.com`
 - `statsig.com`
 - `sentry.io`
+- `mcp-proxy.anthropic.com`
+
+Always include these Docker infrastructure domains (needed for image pulls inside the sandbox):
+- `docker.io`, `*.docker.io`
+- `registry-1.docker.io`, `auth.docker.io`
+- `production.cloudflare.docker.com`
+- `*.r2.cloudflarestorage.com`
 
 ## Network configuration
 

@@ -121,13 +121,14 @@ The staged file is cleaned up automatically after setup. If network isolation is
 ensure `starship.rs` and `*.starship.rs` are in the allowlist before running setup (the
 install script downloads from `starship.rs` and the binary from `github.com`).
 
-**Run the setup script**:
+**Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
+sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM):
 
 ```bash
-docker sandbox exec <sandbox-name> bash -c "bash <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.sh <project_dir>"
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir>
 ```
 
-The `setup-sandbox.sh` script configures:
+The `setup-sandbox.py` script configures:
 1. **Working directory** — appends `cd <project_dir>` to `.bashrc` so `docker sandbox exec`
    sessions land in the project folder, not the workspace root
 2. **`yolo` alias** — `alias yolo='claude --dangerously-skip-permissions'` so the user can
@@ -160,7 +161,11 @@ docker sandbox network proxy <sandbox-name> \
   --allow-host "*.github.com" \
   --allow-host "*.githubusercontent.com" \
   --allow-host "docker.io" \
-  --allow-host "*.docker.io"
+  --allow-host "*.docker.io" \
+  --allow-host "registry-1.docker.io" \
+  --allow-host "auth.docker.io" \
+  --allow-host "production.cloudflare.docker.com" \
+  --allow-host "*.r2.cloudflarestorage.com"
 ```
 
 Add Starship download domains if the setup script will install Starship:
@@ -187,8 +192,15 @@ Additional domains can be added later without recreating the sandbox:
 docker sandbox network proxy <sandbox-name> --allow-host "example.com"
 ```
 
-Use `docker sandbox network log` to monitor allowed and blocked traffic and identify any
-missing domains.
+For ongoing monitoring, offer to run the interactive network monitor. This polls for blocked
+requests every 5 seconds and lets the user allow domains on the fly:
+
+```bash
+python3 ${CLAUDE_SKILL_DIR}/scripts/network-monitor.py <sandbox-name>
+```
+
+The monitor shows a numbered list of blocked domains. The user can type a number to allow a
+single domain, `a` to allow all, `r` to refresh, or `q` to quit.
 
 ### Step 5 — Summary
 
@@ -208,11 +220,14 @@ Key commands:
 - `docker sandbox rm <name>` — destroy (workspace files preserved on host)
 - `docker sandbox network log` — monitor allowed/blocked network traffic
 
-End by showing the user the exact command to shell into their sandbox:
+End by showing the user the exact commands to shell in and monitor network traffic:
 
 ```
 To shell into your sandbox, run:
   docker sandbox exec -it <sandbox-name> bash
+
+To monitor and manage blocked network traffic, run:
+  python3 ${CLAUDE_SKILL_DIR}/scripts/network-monitor.py <sandbox-name>
 ```
 
 ## Custom templates (advanced)
