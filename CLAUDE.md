@@ -33,7 +33,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 - `hooks` — shell commands that run on lifecycle events (e.g. `SessionStart` to set up a Python venv)
 - `version`, `metadata` — optional; metadata supports `openclaw` fields like `category` and `requires`
 
-## The four plugins
+## The five plugins
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
@@ -41,6 +41,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 | `web-dev` | `nextjs-starter` | Scaffolds Next.js + shadcn/ui + Tailwind v4 + Prisma v7 |
 | `gws-skills` | `gws-gmail-compose` | Compose/reply/forward Gmail via `.eml` or `.md` draft files |
 | `dev-setup` | `cli-tips`, `statusline` | CLI tool recommendations; statusline install/update |
+| `sandbox` | `sandbox-launch` | Docker sandbox launcher for safe `--dangerously-skip-permissions` usage |
 
 ## Marketplace distribution
 
@@ -54,6 +55,20 @@ The YAML frontmatter controls how and when a skill is invoked:
 ## Statusline
 
 The `statusline` skill (in `dev-setup`) installs a cross-platform Python 3 script (`statusline.py`) to `~/.claude/` and configures Claude Code's status line. It displays model name, git branch, context window usage bar, and Anthropic API usage limits (5-hour and 7-day) with reset countdowns.
+
+## Running tests
+
+Use the project `.venv` for running Python tests:
+
+```bash
+.venv/bin/python3 -m pytest <test-file> -v
+```
+
+## Scripting standards
+
+- **All scripts must be written in Python 3** (stdlib only where possible) — no Bash scripts
+- Scripts must work **cross-platform** (macOS, Linux, Windows) — use `pathlib`, `os.path`, and `platform` instead of platform-specific commands or paths
+- Avoid shell-isms like `~`, `$HOME`, or hardcoded `/usr/bin` paths — use `Path.home()`, `os.environ`, and `shutil.which()`
 
 ## Skill quality standards
 
