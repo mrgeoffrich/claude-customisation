@@ -10,6 +10,7 @@ Usage:
 Uses only Python 3 stdlib — no pip dependencies.
 """
 
+import select
 import subprocess
 import sys
 import time
@@ -59,6 +60,9 @@ def parse_section(output: str, section: str) -> list[dict[str, str]]:
                     "rule": parts[2],
                     "count": count,
                 })
+            elif parts:
+                print(f"  Warning: could not parse network log line: {line!r}",
+                      file=sys.stderr)
     return entries
 
 
@@ -127,7 +131,6 @@ def clear_screen() -> None:
 
 def prompt_with_timeout(timeout: float) -> str:
     """Read input with a timeout using select."""
-    import select
     try:
         ready, _, _ = select.select([sys.stdin], [], [], timeout)
         if ready:

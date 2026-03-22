@@ -17,7 +17,6 @@ Uses only Python 3 stdlib — no pip dependencies.
 
 import json
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -30,15 +29,8 @@ STARSHIP_MARKER = "# sandbox-launch: starship"
 
 
 def get_shell_rc() -> Path:
-    """Return the appropriate shell rc file for the current platform."""
-    home = Path.home()
-    if platform.system() == "Windows":
-        # PowerShell profile
-        ps_dir = home / "Documents" / "PowerShell"
-        ps_dir.mkdir(parents=True, exist_ok=True)
-        return ps_dir / "Microsoft.PowerShell_profile.ps1"
-    # Linux/macOS — sandbox VMs use bash
-    return home / ".bashrc"
+    """Return the shell rc file. Sandbox VMs always run Linux/bash."""
+    return Path.home() / ".bashrc"
 
 
 def append_if_missing(path: Path, marker: str, lines: list[str]) -> bool:
@@ -59,20 +51,12 @@ def setup_shell(project_dir: str, rc_path: Path) -> None:
     """Configure shell with cd to project dir, yolo alias, and GitHub token."""
     gh_token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
 
-    if platform.system() == "Windows":
-        lines = [
-            f'Set-Location "{project_dir}"',
-            'function yolo {{ claude --dangerously-skip-permissions @args }}',
-        ]
-        if gh_token:
-            lines.append(f'$env:GH_TOKEN = "{gh_token}"')
-    else:
-        lines = [
-            f'cd "{project_dir}"',
-            "alias yolo='claude --dangerously-skip-permissions'",
-        ]
-        if gh_token:
-            lines.append(f'export GH_TOKEN="{gh_token}"')
+    lines = [
+        f'cd "{project_dir}"',
+        "alias yolo='claude --dangerously-skip-permissions'",
+    ]
+    if gh_token:
+        lines.append(f'export GH_TOKEN="{gh_token}"')
 
     if append_if_missing(rc_path, SETUP_MARKER, lines):
         print(f"  Shell configured: {rc_path}")
@@ -165,16 +149,10 @@ def setup_starship(project_dir: str, rc_path: Path) -> str:
         return "Starship install failed (check network allowlist for starship.rs)"
 
     # Configure shell
-    if platform.system() == "Windows":
-        lines = [
-            f'$env:PATH = "{local_bin};$env:PATH"',
-            'Invoke-Expression (&starship init powershell)',
-        ]
-    else:
-        lines = [
-            f'export PATH="{local_bin}:$PATH"',
-            'eval "$(starship init bash)"',
-        ]
+    lines = [
+        f'export PATH="{local_bin}:$PATH"',
+        'eval "$(starship init bash)"',
+    ]
     append_if_missing(rc_path, STARSHIP_MARKER, lines)
 
     # Clean up staged file
