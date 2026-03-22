@@ -44,7 +44,7 @@
       }
     },
     {
-      "name": "sandbox",
+      "name": "cc-sandbox",
       "source": "./plugins/sandbox",
       "description": "Launch Claude Code in isolated Docker sandboxes with --dangerously-skip-permissions enabled safely",
       "version": "0.1.0",
