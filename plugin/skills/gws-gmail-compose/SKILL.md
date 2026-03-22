@@ -53,7 +53,7 @@ This is a **markdown** email with a [link](https://example.com).
 - `to:` and `subject:` are required; `cc:`, `bcc:` are optional
 - Do **not** include `from:` — Gmail adds it automatically
 - Everything after the closing `---` is the markdown body
-- Requires `pip install markdown`
+- When installed as a plugin, `markdown` is auto-installed via the SessionStart hook — no manual setup needed. For local `.claude/skills/` use, run `pip install markdown`.
 
 Send it:
 

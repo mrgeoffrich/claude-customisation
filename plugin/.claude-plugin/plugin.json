@@ -1,8 +1,16 @@
 {
-  "name": "security-review",
+  "name": "claude-customisation",
   "version": "0.1.0",
-  "description": "Comprehensive security review plugin that auto-detects project type and launches parallel security analysis agents across relevant attack surface categories",
+  "description": "Skills for security review, Next.js scaffolding, Gmail composition, and CLI tool tips",
   "author": {
     "name": "Geoffrey Rich"
+  },
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" \"${CLAUDE_PLUGIN_DATA}/requirements.txt\" >/dev/null 2>&1 || (python3 -m venv \"${CLAUDE_PLUGIN_DATA}/.venv\" && \"${CLAUDE_PLUGIN_DATA}/.venv/bin/pip\" install -r \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" -q && cp \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" \"${CLAUDE_PLUGIN_DATA}/requirements.txt\") || rm -f \"${CLAUDE_PLUGIN_DATA}/requirements.txt\"; [ -n \"${CLAUDE_ENV_FILE}\" ] && [ -d \"${CLAUDE_PLUGIN_DATA}/.venv\" ] && echo \"source ${CLAUDE_PLUGIN_DATA}/.venv/bin/activate\" >> \"${CLAUDE_ENV_FILE}\""
+      }]
+    }]
   }
 }
