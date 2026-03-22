@@ -1,10 +1,12 @@
 ---
 name: cli-tips
 description: >
-  Share CLI tool recommendations and setup tips. Use when the user asks about useful CLI tools,
-  command-line recommendations, developer tools, or asks what tools Geoff uses/recommends. Also
-  trigger when the user asks about gws, Google Workspace CLI, Playwright CLI, browser testing,
-  or how to set up any of these tools.
+  This skill should be used when the user asks about installing, setting up, or authenticating
+  CLI developer tools — specifically gws (Google Workspace CLI) initial setup, authentication,
+  or installation, or Playwright CLI installation, codegen, UI mode, and test running. Also
+  trigger when the user asks what CLI tools are recommended, asks about useful developer tools,
+  or says things like "how do I set up gws", "install Playwright", or "what tools do you use".
+  Note: for composing or sending Gmail messages use the gws-gmail-compose skill instead.
 ---
 
 # CLI Tips

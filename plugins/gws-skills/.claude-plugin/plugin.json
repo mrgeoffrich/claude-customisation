@@ -1,7 +1,7 @@
 {
-  "name": "claude-customisation",
+  "name": "gws-skills",
   "version": "0.1.0",
-  "description": "Skills for security review, Next.js scaffolding, Gmail composition, and CLI tool tips",
+  "description": "Google Workspace skills for Gmail, Drive, Calendar, and more",
   "author": {
     "name": "Geoffrey Rich"
   },

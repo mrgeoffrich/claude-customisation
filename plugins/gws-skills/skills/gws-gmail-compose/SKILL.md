@@ -1,7 +1,7 @@
 ---
 name: gws-gmail-compose
 version: 1.1.0
-description: "Gmail: Compose, reply, forward and send emails via local draft files (no manual base64). Supports plain-text .eml files and markdown .md files (auto-converted to styled HTML). Use this skill whenever sending, replying to, or forwarding a Gmail message — even if the user just says 'send an email', 'reply to that', 'forward this to X', or 'draft a message'. Always prefer this over raw gws gmail send."
+description: "This skill should be used whenever composing, sending, replying to, forwarding, or saving a Gmail message as a draft. Triggers include: 'send an email', 'reply to that message', 'forward this to X', 'draft a message for me', 'write an email to...'. Handles plain-text .eml files and markdown .md files with automatic base64 encoding — no manual encoding required."
 metadata:
   openclaw:
     category: "productivity"
@@ -156,7 +156,7 @@ The output file contains decoded headers and plain-text body — human-readable,
 
 ---
 
-### 4. Forwarding a message
+### 5. Forwarding a message
 
 **Prepare a forward draft (no existing file):**
 

@@ -13,7 +13,7 @@ Scaffold a production-ready Next.js app with shadcn/ui, Tailwind v4, Prisma, and
 Before doing anything, ask the user for these details (suggest the defaults shown):
 
 1. **Project name** — kebab-case, e.g. `my-app`
-2. **Database provider** — `sqlite` (default, great for local dev), `postgresql`, or `mysql`
+2. **Database provider** — `sqlite` (default, great for local dev) or `postgresql`
 3. **Base color theme** — one of the shadcn base colors:
    - `neutral` (default) — clean, modern
    - `zinc` — cool-toned
@@ -115,7 +115,7 @@ npm install prisma && npm install @prisma/adapter-pg pg
 ```bash
 npx prisma init --datasource-provider sqlite
 ```
-(or `postgresql` / `mysql`)
+(or `postgresql`)
 
 This creates:
 - `prisma/schema.prisma` — with `provider = "prisma-client"` and `output = "../src/generated/prisma"`
