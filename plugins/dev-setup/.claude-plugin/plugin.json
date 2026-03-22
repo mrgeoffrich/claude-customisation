@@ -1,0 +1,8 @@
+{
+  "name": "dev-setup",
+  "version": "0.1.0",
+  "description": "Developer setup and CLI tool recommendations",
+  "author": {
+    "name": "Geoffrey Rich"
+  }
+}

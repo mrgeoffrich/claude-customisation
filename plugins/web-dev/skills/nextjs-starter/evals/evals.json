@@ -1,0 +1,76 @@
+{
+  "skill_name": "nextjs-starter",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "i want to start a new project called recipe-book, just use the defaults for everything",
+      "expected_output": "A working Next.js project with shadcn/ui, Tailwind v4, Prisma (sqlite), dark mode, and a polished landing page, all using default settings",
+      "files": [],
+      "expectations": [
+        "Project directory exists with package.json",
+        "tsconfig.json exists in project root",
+        "components.json exists (shadcn initialized)",
+        "src/lib/utils.ts exists with cn() function",
+        "At least 5 component files exist in src/components/ui/",
+        "src/components/theme-provider.tsx exists",
+        "src/components/theme-toggle.tsx exists",
+        "src/app/layout.tsx contains ThemeProvider",
+        "src/app/layout.tsx contains suppressHydrationWarning",
+        "prisma/schema.prisma exists",
+        "src/lib/db.ts exists with singleton pattern",
+        "prisma/schema.prisma contains a User model",
+        ".env exists with DATABASE_URL",
+        "src/app/page.tsx is customized (not default Next.js boilerplate)",
+        "package.json contains postinstall script with prisma generate"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a new app called dashboard-pro. I want postgresql for the database, the zinc theme, and install these components: button, card, input, label, table, tabs, dialog, dropdown-menu, avatar, badge, separator, sheet, tooltip",
+      "expected_output": "A working Next.js project configured with PostgreSQL, zinc base color theme, and all 13 specified shadcn components installed, with dark mode and Prisma",
+      "files": [],
+      "expectations": [
+        "Project directory exists with package.json",
+        "tsconfig.json exists in project root",
+        "components.json exists (shadcn initialized)",
+        "src/lib/utils.ts exists with cn() function",
+        "At least 5 component files exist in src/components/ui/",
+        "src/components/theme-provider.tsx exists",
+        "src/components/theme-toggle.tsx exists",
+        "src/app/layout.tsx contains ThemeProvider",
+        "src/app/layout.tsx contains suppressHydrationWarning",
+        "prisma/schema.prisma exists",
+        "src/lib/db.ts exists with singleton pattern",
+        "prisma/schema.prisma contains a User model",
+        ".env exists with DATABASE_URL",
+        "src/app/page.tsx is customized (not default Next.js boilerplate)",
+        "package.json contains postinstall script with prisma generate",
+        "prisma/schema.prisma contains postgresql provider",
+        "table and tabs component files exist in src/components/ui/"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "set me up with a new nextjs app with shadcn and prisma, call it bug-tracker",
+      "expected_output": "Either asks clarifying questions or proceeds with sensible defaults. End result is a working Next.js project with shadcn, Prisma, dark mode, and a landing page",
+      "files": [],
+      "expectations": [
+        "Project directory exists with package.json",
+        "tsconfig.json exists in project root",
+        "components.json exists (shadcn initialized)",
+        "src/lib/utils.ts exists with cn() function",
+        "At least 5 component files exist in src/components/ui/",
+        "src/components/theme-provider.tsx exists",
+        "src/components/theme-toggle.tsx exists",
+        "src/app/layout.tsx contains ThemeProvider",
+        "src/app/layout.tsx contains suppressHydrationWarning",
+        "prisma/schema.prisma exists",
+        "src/lib/db.ts exists with singleton pattern",
+        "prisma/schema.prisma contains a User model",
+        ".env exists with DATABASE_URL",
+        "src/app/page.tsx is customized (not default Next.js boilerplate)",
+        "package.json contains postinstall script with prisma generate"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "gws-skills",
+  "version": "0.1.0",
+  "description": "Google Workspace skills for Gmail, Drive, Calendar, and more",
+  "author": {
+    "name": "Geoffrey Rich"
+  },
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "diff -q \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" \"${CLAUDE_PLUGIN_DATA}/requirements.txt\" >/dev/null 2>&1 || (python3 -m venv \"${CLAUDE_PLUGIN_DATA}/.venv\" && \"${CLAUDE_PLUGIN_DATA}/.venv/bin/pip\" install -r \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" -q && cp \"${CLAUDE_PLUGIN_ROOT}/skills/gws-gmail-compose/requirements.txt\" \"${CLAUDE_PLUGIN_DATA}/requirements.txt\") || rm -f \"${CLAUDE_PLUGIN_DATA}/requirements.txt\"; [ -n \"${CLAUDE_ENV_FILE}\" ] && [ -d \"${CLAUDE_PLUGIN_DATA}/.venv\" ] && echo \"source ${CLAUDE_PLUGIN_DATA}/.venv/bin/activate\" >> \"${CLAUDE_ENV_FILE}\""
+      }]
+    }]
+  }
+}

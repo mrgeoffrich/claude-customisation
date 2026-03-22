@@ -1,0 +1,25 @@
+{
+  "name": "mrgeoffrich",
+  "owner": {
+    "name": "Geoffrey Rich"
+  },
+  "metadata": {
+    "description": "Claude Code skills and configuration by Geoffrey Rich"
+  },
+  "plugins": [
+    {
+      "name": "claude-customisation",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/mrgeoffrich/claude-customisation.git",
+        "path": "plugin",
+        "ref": "main"
+      },
+      "description": "Skills for security review, Next.js scaffolding, Gmail composition, and CLI tool tips",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "name": "security",
+  "version": "0.1.0",
+  "description": "Comprehensive security review skills for auditing codebases",
+  "author": {
+    "name": "Geoffrey Rich"
+  }
+}

@@ -1,0 +1,24 @@
+# Email styles for markdown emails
+# ------------------------------------
+# These values control how .md draft files are rendered into HTML when sending.
+#
+# To customise without losing upstream changes, copy this file to
+# email-styles.local.yaml — local overrides take precedence and are gitignored.
+#
+# All values are passed directly into CSS, so standard CSS units apply
+# (px, em, %, hex colours, font stacks, etc.)
+
+font_family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif"
+font_size: "15px"
+line_height: "1.6"
+body_color: "#333333"
+background_color: "#ffffff"
+heading_color: "#111111"
+link_color: "#0070f3"
+code_bg: "#f4f4f4"
+code_color: "#c7254e"
+code_font: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace"
+blockquote_border: "#cccccc"
+blockquote_color: "#666666"
+max_width: "600px"
+padding: "20px"
