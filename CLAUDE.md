@@ -1,0 +1,63 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this repo is
+
+A public collection of Claude Code plugins distributed via the marketplace as `mrgeoffrich/claude-customisation`. There is no build system, no package manager, and no test runner — skills are prompt-based Markdown files, not compiled code.
+
+## Plugin architecture
+
+Each plugin lives under `plugins/<name>/` and is independently installable:
+
+```
+plugins/<name>/
+├── .claude-plugin/plugin.json     # Manifest: name, version, description, hooks
+└── skills/<skill-name>/
+    ├── SKILL.md                   # Required: YAML frontmatter + instructions for Claude
+    ├── scripts/                   # Executable scripts (Python, Bash, etc.)
+    ├── assets/                    # Template files Claude copies into user projects
+    ├── references/                # Documentation loaded on-demand during skill execution
+    └── evals/evals.json          # Evaluation scenarios for skill quality validation
+```
+
+Agents used by skills live at `plugins/<name>/agents/<agent-name>.md`.
+
+## SKILL.md frontmatter fields
+
+The YAML frontmatter controls how and when a skill is invoked:
+
+- `name` — used as the slash command name
+- `description` — natural language trigger conditions; this is what Claude reads to decide whether to auto-invoke the skill
+- `allowed-tools` — tools Claude may use without asking permission
+- `hooks` — shell commands that run on lifecycle events (e.g. `SessionStart` to set up a Python venv)
+- `version`, `metadata` — optional; metadata supports `openclaw` fields like `category` and `requires`
+
+## The four plugins
+
+| Plugin | Skills | Purpose |
+|--------|--------|---------|
+| `security` | `security-review` | Multi-agent security audit; fans out parallel agents per attack surface |
+| `web-dev` | `nextjs-starter` | Scaffolds Next.js + shadcn/ui + Tailwind v4 + Prisma v7 |
+| `gws-skills` | `gws-gmail-compose` | Compose/reply/forward Gmail via `.eml` or `.md` draft files |
+| `dev-setup` | `cli-tips`, `statusline` | CLI tool recommendations; statusline install/update |
+
+## Marketplace distribution
+
+`.claude-plugin/marketplace.json` registers this repo as the `mrgeoffrich` marketplace publisher. Users install plugins via:
+
+```
+/plugin marketplace add mrgeoffrich/claude-customisation#plugins/<name>
+/plugin install <name>@mrgeoffrich
+```
+
+## Statusline scripts
+
+`statusline.sh` (Bash) and `statusline.ps1` (PowerShell) display model name, git branch, context window usage bar, and Anthropic API usage limits in Claude Code's status line. They cache API calls for 2 minutes at `/tmp/claude-usage-cache.json`. Installation instructions are in `README.md`.
+
+## Skill quality standards
+
+- `description` fields must be precise enough to trigger reliably without false positives — they are the primary routing mechanism
+- `allowed-tools` should be minimal; only include tools the skill actually needs
+- Scripts in `skills/*/scripts/` should be self-contained with minimal dependencies
+- The `gws-gmail-compose` skill uses a `SessionStart` hook to auto-provision a Python venv — this is the pattern to follow for skills with pip dependencies

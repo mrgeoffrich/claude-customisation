@@ -3,76 +3,80 @@ name: cli-tips
 description: >
   This skill should be used when the user asks about installing, setting up, or authenticating
   CLI developer tools — specifically gws (Google Workspace CLI) initial setup, authentication,
-  or installation, or Playwright CLI installation, codegen, UI mode, and test running. Also
-  trigger when the user asks what CLI tools are recommended, asks about useful developer tools,
-  or says things like "how do I set up gws", "install Playwright", or "what tools do you use".
+  or installation, or Playwright CLI installation, codegen, UI mode, and test running, or GitHub
+  CLI (gh) setup and usage. Also trigger when the user asks what CLI tools are recommended, asks
+  about useful developer tools, or says things like "how do I set up gws", "install Playwright",
+  "install gh", or "what tools do you use".
   Note: for composing or sending Gmail messages use the gws-gmail-compose skill instead.
 ---
 
 # CLI Tips
 
-Here are some CLI tools I've found genuinely useful, with setup notes.
+Organised by what kind of work you're doing.
 
 ---
 
-## Google Workspace CLI (gws)
+## Must-haves (general development)
 
-A unified command-line tool for Google Workspace services — Drive, Gmail, Calendar, Sheets, Docs, and more. Built in Rust, returns structured JSON, and is designed to work well with AI agents. It dynamically generates commands by reading Google's Discovery API, so it always reflects the latest endpoints without needing updates.
+### GitHub CLI (gh)
 
-### Install
+The official GitHub CLI — create PRs, manage issues, trigger workflows, and clone repos without leaving the terminal. Essential for any project hosted on GitHub.
 
-```bash
-# npm
-npm install -g @googleworkspace/cli
-
-# Homebrew
-brew install googleworkspace-cli
-
-# Cargo (from source)
-cargo install --git https://github.com/googleworkspace/cli --locked
-```
-
-### Auth setup
-
-The interactive setup creates a Google Cloud project for you (requires `gcloud` CLI):
+#### Install
 
 ```bash
-gws auth setup
+# Homebrew (macOS)
+brew install gh
 ```
 
-For re-authentication with specific scopes, use `gws auth login`. The scopes below give access to Gmail, Calendar, and Drive — but note that **`drive.file` is intentionally limited**: it only grants access to files and folders that the app itself creates, not your entire Drive. This is a good security boundary.
+#### Auth setup
 
 ```bash
-gws auth login --scopes 'https://www.googleapis.com/auth/drive.file,https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile'
+gh auth login
 ```
 
-### Key commands
+Follow the prompts — it opens a browser to authenticate. After login, `gh` automatically configures git to use HTTPS credentials.
+
+#### Key commands
 
 ```bash
-# List Drive files
-gws drive files list --params '{"pageSize": 10}'
+# Create a pull request
+gh pr create
 
-# Send an email
-gws gmail +send --to someone@example.com --subject "Hello" --body "Message"
+# List open PRs
+gh pr list
 
-# View your calendar agenda
-gws calendar +agenda
+# Merge a PR (squash)
+gh pr merge --squash
 
-# Append to a spreadsheet
-gws sheets +append --spreadsheet SHEET_ID --values "data"
+# View PR details
+gh pr view <number>
+
+# Create an issue
+gh issue create
+
+# List issues
+gh issue list
+
+# Trigger a GitHub Actions workflow
+gh workflow run <workflow>
+
+# Clone a repo
+gh repo clone OWNER/REPO
+
+# See an overview of your open work
+gh status
 ```
-
-Commands prefixed with `+` are helper shortcuts for common workflows. Use `--dry-run` to preview any operation before running it.
-
-Credentials are encrypted at rest with AES-256-GCM backed by the OS keyring.
 
 ---
 
-## Playwright CLI
+## Web development & browser automation
 
-Microsoft's end-to-end browser testing framework, supporting Chromium, Firefox, and WebKit. The CLI is where most of the power lives — especially the codegen recorder and trace viewer.
+### Playwright CLI
 
-### Install
+Microsoft's end-to-end browser testing framework, supporting Chromium, Firefox, and WebKit. Useful for writing automated tests and for scripting browser interactions (scraping, automation, form filling).
+
+#### Install
 
 ```bash
 # Quick start (scaffolds a new project)
@@ -83,7 +87,7 @@ npm i -D @playwright/test
 npx playwright install
 ```
 
-### Key commands
+#### Key commands
 
 ```bash
 # Run all tests
@@ -114,10 +118,65 @@ npx playwright show-report
 npx playwright show-trace trace.zip
 ```
 
-### Tips
+#### Tips
 
 - **`codegen` is the fastest way to write tests** — it records your interactions and generates the test code. Works for TypeScript, JavaScript, Python, Java, and .NET.
 - **`--ui` mode** gives you a live test runner with time-travel debugging — great for figuring out why a test is flaky.
 - Auto-wait means you rarely need `sleep()` or artificial timeouts; Playwright waits for elements to be ready before acting.
 - Tests run in isolated browser contexts that spin up in milliseconds, so parallelism is fast and reliable.
 - Requires Node.js 20+.
+
+---
+
+## Google Workspace (Gmail, Calendar, Drive, Sheets)
+
+### Google Workspace CLI (gws)
+
+A unified command-line tool for Google Workspace services — Drive, Gmail, Calendar, Sheets, Docs, and more. Built in Rust, returns structured JSON, and works well with AI agents. Dynamically generates commands from Google's Discovery API, so it always reflects the latest endpoints.
+
+#### Install
+
+```bash
+# npm
+npm install -g @googleworkspace/cli
+
+# Homebrew
+brew install googleworkspace-cli
+
+# Cargo (from source)
+cargo install --git https://github.com/googleworkspace/cli --locked
+```
+
+#### Auth setup
+
+The interactive setup creates a Google Cloud project for you (requires `gcloud` CLI):
+
+```bash
+gws auth setup
+```
+
+For re-authentication with specific scopes, use `gws auth login`. The scopes below give access to Gmail, Calendar, and Drive — but note that **`drive.file` is intentionally limited**: it only grants access to files and folders that the app itself creates, not your entire Drive. This is a good security boundary.
+
+```bash
+gws auth login --scopes 'https://www.googleapis.com/auth/drive.file,https://www.googleapis.com/auth/gmail.modify,https://www.googleapis.com/auth/calendar,openid,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/userinfo.profile'
+```
+
+#### Key commands
+
+```bash
+# List Drive files
+gws drive files list --params '{"pageSize": 10}'
+
+# Send an email
+gws gmail +send --to someone@example.com --subject "Hello" --body "Message"
+
+# View your calendar agenda
+gws calendar +agenda
+
+# Append to a spreadsheet
+gws sheets +append --spreadsheet SHEET_ID --values "data"
+```
+
+Commands prefixed with `+` are helper shortcuts for common workflows. Use `--dry-run` to preview any operation before running it.
+
+Credentials are encrypted at rest with AES-256-GCM backed by the OS keyring.

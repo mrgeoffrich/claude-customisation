@@ -40,7 +40,7 @@ Drop-in plugins that extend what Claude Code can do. Each plugin is focused on a
 /plugin install dev-setup@mrgeoffrich
 ```
 
-**`cli-tips`** — Opinionated recommendations for CLI tools worth adding to your setup. Currently covers the **Google Workspace CLI** (`gws`) — a Rust-built, AI-friendly tool for Drive, Gmail, Calendar, Sheets, and more — and the **Playwright CLI**, including codegen, UI mode, trace viewer, and tips for writing reliable browser tests fast.
+**`cli-tips`** — Opinionated recommendations for CLI tools worth adding to your setup, organised by what kind of work you're doing. Must-haves: **GitHub CLI** (`gh`) for managing PRs, issues, and workflows without leaving the terminal. Web dev & automation: **Playwright CLI**, including codegen, UI mode, trace viewer, and tips for writing reliable browser tests fast. Google Workspace: **gws CLI** — a Rust-built, AI-friendly tool for Drive, Gmail, Calendar, Sheets, and more.
 
 ---
 
