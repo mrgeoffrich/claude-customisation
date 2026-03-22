@@ -70,6 +70,10 @@ Use the project `.venv` for running Python tests:
 - Scripts must work **cross-platform** (macOS, Linux, Windows) — use `pathlib`, `os.path`, and `platform` instead of platform-specific commands or paths
 - Avoid shell-isms like `~`, `$HOME`, or hardcoded `/usr/bin` paths — use `Path.home()`, `os.environ`, and `shutil.which()`
 
+## Docker Sandbox reference docs
+
+`docker-sandbox-docs/` contains reference documentation for Docker Desktop Sandboxes (architecture, CLI, networking, templates, troubleshooting). Consult these when working on the `sandbox` plugin or its `sandbox-launch` skill.
+
 ## Skill quality standards
 
 - `description` fields must be precise enough to trigger reliably without false positives — they are the primary routing mechanism
