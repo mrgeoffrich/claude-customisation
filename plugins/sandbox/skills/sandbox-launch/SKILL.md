@@ -3,11 +3,9 @@ name: sandbox-launch
 description: >
   Launch Claude Code in an isolated Docker sandbox with --dangerously-skip-permissions enabled
   safely. Use this skill when the user wants to run Claude Code in a sandbox, container, Docker
-  environment, or isolated mode with unrestricted permissions. Triggers on: "run in docker",
+  environment, or isolated mode with unrestricted permissions. Triggers on:
   "skip permissions safely", "isolated mode", "containerise claude", "dangerously-skip-permissions",
-  "run unattended", "autonomous mode", "headless claude", "docker sandbox", "launch sandbox",
-  "run claude in a container". Do NOT trigger for the built-in /sandbox command — this skill is
-  for Docker-based full VM isolation, not the native OS-level sandbox.
+  "run unattended", "autonomous mode", "headless claude", "docker sandbox", "launch sandbox". Do NOT trigger for the built-in /sandbox command — this skill is for Docker-based full VM isolation, not the native OS-level sandbox.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 version: "0.1.0"
 metadata:
