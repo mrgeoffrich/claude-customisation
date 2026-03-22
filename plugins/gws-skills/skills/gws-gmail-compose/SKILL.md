@@ -232,7 +232,7 @@ Available style keys (all standard CSS values):
 
 ## Finding message IDs
 
-Use the `gws-gmail-triage` or `gws-gmail-read` skills, or:
+Use the `gws` CLI to find message IDs:
 
 ```bash
 # List recent messages

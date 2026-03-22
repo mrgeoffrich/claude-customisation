@@ -1,5 +1,6 @@
 ---
 name: security-review
+allowed-tools: Agent, Glob, Grep, LS, Read, TodoWrite
 description: >
   Comprehensive security review of a codebase. Use this skill whenever the user asks for a security audit, security review, vulnerability scan, security assessment, penetration test prep, threat modeling, OWASP check, or wants to find security issues, bugs, or vulnerabilities in their code. Also trigger when the user asks about secrets exposure, injection risks, authentication issues, or says things like "is this code secure?", "check for vulnerabilities", "review security", or "find security problems".
 ---
@@ -66,12 +67,14 @@ Perform a comprehensive security review of the current codebase. Auto-detect the
    - Transport Security
    - CSRF (if web)
 
-3. Launch each agent with a detailed prompt specifying:
+3. Read `references/category-reference.md` to load the full checklist for the selected categories.
+4. Read `agents/security-reviewer.md` — use its contents as the system prompt for every analysis agent you launch.
+5. Launch each agent with a detailed prompt specifying:
    - The exact categories to review
-   - The relevant checklist items from `references/category-reference.md`
+   - The relevant checklist items loaded from `references/category-reference.md`
    - The project-specific context (tech stack, frameworks, key files)
    - Instructions to return findings with severity, confidence (integer 0–100: how certain this is a real vulnerability vs. a false positive), file:line, and the 10 most important files reviewed
-4. Run agents in the background when possible to maximize parallelism.
+6. Run agents in the background when possible to maximize parallelism.
 
 ---
 

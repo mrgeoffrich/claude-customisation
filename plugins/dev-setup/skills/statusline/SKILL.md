@@ -32,7 +32,7 @@ On macOS / Linux, make it executable:
 chmod +x ~/.claude/statusline.py
 ```
 
-### 3. Update `~/.claude/settings.json`
+### 2. Update `~/.claude/settings.json`
 
 Read the existing `~/.claude/settings.json` (create it if absent) and merge in the `statusLine`
 key — do not overwrite other settings.
