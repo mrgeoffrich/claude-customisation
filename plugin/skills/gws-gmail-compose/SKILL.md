@@ -13,6 +13,8 @@ metadata:
 
 # gws-gmail-compose
 
+> **Requires:** the [`gws` Google Workspace CLI](https://github.com/googleworkspace/cli) installed and authenticated.
+
 > **Use this instead of the raw `gws gmail` send command** whenever composing, replying, forwarding, or editing an email. The raw API requires manually base64url-encoding an RFC 2822 message — this script does all of that automatically.
 
 The script is bundled at `.claude/skills/gws-gmail-compose/scripts/gmail-compose.py`. All commands below assume the **repo root as the working directory** (which is the Claude Code default).
