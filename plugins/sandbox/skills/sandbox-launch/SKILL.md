@@ -111,7 +111,32 @@ docker sandbox run claude "$(pwd)"
 This launches Claude Code in a microVM with bidirectional file sync. Files appear at the same
 absolute path inside the sandbox.
 
-### Step 3.5 — Run setup script
+### Step 3.5 — Generate authentication token
+
+Claude Code requires authentication when it first starts. On the host Mac, this opens a browser
+automatically — but inside the headless sandbox VM there is no browser, so the auto-open fails
+and the user must manually copy/paste a login URL. To avoid this, generate a dedicated OAuth
+token for this sandbox on the host before running the setup script.
+
+**Important**: Each sandbox requires its own unique token. Tokens must not be reused across
+sandboxes.
+
+**Requires**: Claude Pro or Max subscription.
+
+Run on the host:
+
+```bash
+claude setup-token
+```
+
+This opens the browser on the host for OAuth authentication and outputs a long-lived token
+(format: `sk-ant-oat01-...`). Capture this token — it will be passed into the sandbox in
+the next step via the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
+
+If the user does not have a Pro/Max subscription, skip this step — they can authenticate
+manually inside the sandbox by pressing `c` to copy the login URL when prompted.
+
+### Step 3.6 — Run setup script
 
 After the sandbox is created, run the setup script inside it to configure the environment.
 
@@ -138,13 +163,16 @@ cp ${CLAUDE_SKILL_DIR}/scripts/setup-sandbox.py <project_dir>/.setup-sandbox.py
 **Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
 sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM).
 If `ls_colors=true` was detected, also pass `SANDBOX_LS_COLORS=1` so the setup script
-enables colored `ls` output inside the sandbox:
+enables colored `ls` output inside the sandbox. If an OAuth token was generated in Step 3.5,
+pass it via `CLAUDE_CODE_OAUTH_TOKEN` so the setup script writes it into the sandbox's shell
+profile for headless authentication:
 
 ```bash
-docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" -e CLAUDE_CODE_OAUTH_TOKEN="<token>" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
 ```
 
 Only include `-e SANDBOX_LS_COLORS="1"` if `ls_colors=true` in the detection output.
+Only include `-e CLAUDE_CODE_OAUTH_TOKEN="<token>"` if a token was generated in Step 3.5.
 
 **Clean up** — remove the staged script from the project directory after setup completes:
 
@@ -159,11 +187,13 @@ The `setup-sandbox.py` script configures:
    type `yolo` to launch Claude Code with all permissions bypassed
 3. **LS colors** — if `SANDBOX_LS_COLORS` is set, adds `alias ls='ls --color=auto'` to
    `.bashrc` so `ls` output matches the host's colored style
-4. **Claude Code permissions** — writes `bypassPermissions` mode and
+4. **Auth token** — if `CLAUDE_CODE_OAUTH_TOKEN` is set, exports it in `.bashrc` so Claude
+   Code authenticates without opening a browser (each sandbox needs its own unique token)
+5. **Claude Code permissions** — writes `bypassPermissions` mode and
    `skipDangerousModePermissionPrompt: true` to `~/.claude/settings.json` inside the sandbox
-5. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
+6. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
    so `docker sandbox exec` sessions display sandbox name, project dir, and environment controls
-6. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
+7. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
    copies the config to `~/.config/starship.toml`, adds PATH and `eval "$(starship init bash)"`
    to `.bashrc`, then removes the staged file
 
@@ -229,6 +259,7 @@ Tell the user what is now running and how to manage it:
 
 - Files sync bidirectionally — changes inside the sandbox appear on the host
 - Credentials are injected via proxy (never stored in the VM)
+- Authentication is pre-configured via OAuth token (no browser needed inside the sandbox)
 - The sandbox has its own Docker daemon for building/running containers
 - Type `yolo` inside the sandbox to launch Claude with `--dangerously-skip-permissions`
 - Shell sessions auto-`cd` to the project directory

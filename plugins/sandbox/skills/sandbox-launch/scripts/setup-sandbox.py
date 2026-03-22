@@ -25,6 +25,7 @@ from pathlib import Path
 
 SETUP_MARKER = "# sandbox-launch: setup"
 LS_COLORS_MARKER = "# sandbox-launch: ls-colors"
+AUTH_MARKER = "# sandbox-launch: auth"
 WELCOME_MARKER = "# sandbox-launch: welcome"
 STARSHIP_MARKER = "# sandbox-launch: starship"
 
@@ -85,6 +86,30 @@ def setup_ls_colors(rc_path: Path) -> None:
         print("  LS colors: enabled")
     else:
         print("  LS colors: already configured")
+
+
+def setup_auth(rc_path: Path) -> None:
+    """Write Claude Code OAuth token to shell profile for headless auth.
+
+    The token is generated per-sandbox on the host via `claude setup-token`
+    and passed in via the CLAUDE_CODE_OAUTH_TOKEN env var. Each sandbox
+    requires its own unique token — tokens must not be reused across sandboxes.
+
+    This avoids the browser-open step when Claude Code starts inside the
+    sandbox (there is no browser in the headless VM).
+    """
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
+    if not token:
+        print("  Auth token: not provided (user will need to authenticate manually)")
+        return
+
+    lines = [
+        f'export CLAUDE_CODE_OAUTH_TOKEN="{token}"',
+    ]
+    if append_if_missing(rc_path, AUTH_MARKER, lines):
+        print("  Auth token: set in shell profile")
+    else:
+        print("  Auth token: already configured")
 
 
 def setup_permissions() -> None:
@@ -195,6 +220,7 @@ def main() -> None:
     print("Setting up sandbox...")
     setup_shell(project_dir, rc_path)
     setup_ls_colors(rc_path)
+    setup_auth(rc_path)
     setup_permissions()
     setup_welcome(project_dir, sandbox_name, rc_path)
     starship_status = setup_starship(project_dir, rc_path)
