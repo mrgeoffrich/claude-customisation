@@ -21,7 +21,7 @@ Always include these Claude Code infrastructure domains regardless of project ty
 - `statsig.com`
 - `sentry.io`
 
-## Docker Sandboxes network configuration (Strategy A)
+## Network configuration
 
 ### Deny-by-default with specific allowlist
 
@@ -62,24 +62,6 @@ docker sandbox network log
 - Per-sandbox: `~/.docker/sandboxes/vm/<sandbox-name>/proxy-config.json`
 - Defaults for new sandboxes: `~/.sandboxd/proxy-config.json`
 
-## Devcontainer firewall configuration (Strategy B)
-
-### Adding domains to init-firewall.py
-
-Add entries to the `project_domains` list:
-
-```python
-project_domains: list[str] = [
-    "registry.npmjs.org",
-    "pypi.org",
-    "files.pythonhosted.org",
-]
-```
-
-### Adding GitHub IP ranges
-
-Uncomment the GitHub IPs block in `init-firewall.py`. It uses the GitHub meta API to fetch current IP ranges and adds them via `ipset` (with a fallback to individual iptables rules).
-
 ### Custom API domains
 
-If the project calls external APIs, add their domains to `project_domains`. Check `.env`, `.env.example`, or config files for API base URLs.
+If the project calls external APIs, add their domains with `--allow-host`. Check `.env`, `.env.example`, or config files for API base URLs.

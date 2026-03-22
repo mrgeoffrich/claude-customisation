@@ -4,67 +4,49 @@
     {
       "id": 1,
       "prompt": "I want to run Claude in a Docker sandbox for this project",
-      "expected_output": "Detects Docker environment, recommends Docker Sandboxes or devcontainer, and guides through launch",
+      "expected_output": "Detects Docker environment, confirms Docker Sandboxes available, and guides through launch",
       "files": [],
       "expectations": [
-        "Runs detect-environment.sh script",
+        "Runs detect-environment.py script",
         "Reports Docker version and sandbox availability",
         "Checks for ANTHROPIC_API_KEY",
-        "Presents a recommended strategy to the user",
         "Asks for confirmation before proceeding",
-        "Provides clear summary of isolation properties and management commands"
+        "Launches with docker sandbox run claude",
+        "Provides summary of isolation properties and management commands"
       ]
     },
     {
       "id": 2,
-      "prompt": "Set up a devcontainer so I can run Claude with --dangerously-skip-permissions",
-      "expected_output": "Generates .devcontainer/ directory with customised firewall rules",
-      "files": ["package.json"],
-      "expectations": [
-        ".devcontainer/Dockerfile exists and is based on node:20-bookworm",
-        ".devcontainer/devcontainer.json exists with NET_ADMIN and NET_RAW capabilities",
-        ".devcontainer/init-firewall.sh exists and is executable",
-        "init-firewall.sh includes registry.npmjs.org for the Node.js project",
-        "init-firewall.sh includes api.anthropic.com",
-        "init-firewall.sh includes firewall verification step that blocks example.com",
-        "Security warnings about credential exposure are presented",
-        "Launch instructions provided for VS Code or CLI"
-      ]
-    },
-    {
-      "id": 3,
       "prompt": "How do I run Claude autonomously without permission prompts?",
-      "expected_output": "Explains isolation requirement, detects environment, offers sandbox setup",
+      "expected_output": "Explains isolation requirement, detects environment, offers Docker Sandbox setup",
       "files": [],
       "expectations": [
         "Explains that --dangerously-skip-permissions requires isolation",
         "Does not suggest running --dangerously-skip-permissions on a bare host",
         "Runs environment detection",
-        "Offers Docker Sandboxes as primary recommendation",
-        "Mentions devcontainer as fallback",
+        "Recommends Docker Desktop Sandboxes",
         "Discusses credential and network isolation"
       ]
     },
     {
-      "id": 4,
+      "id": 3,
       "prompt": "Launch a sandbox for my Python project with strict network isolation",
-      "expected_output": "Detects Python project, configures deny-by-default network with pypi.org allowed",
+      "expected_output": "Detects Python project, launches sandbox with deny-by-default network allowing pypi.org",
       "files": ["requirements.txt", "pyproject.toml"],
       "expectations": [
         "Detects Python project from requirements.txt or pyproject.toml",
         "Includes pypi.org and files.pythonhosted.org in network allowlist",
         "Includes api.anthropic.com in allowlist",
-        "Configures deny-by-default network policy",
-        "Uses docker sandbox network proxy command for Strategy A or customises init-firewall.sh for Strategy B"
+        "Configures deny-by-default network policy with docker sandbox network proxy"
       ]
     },
     {
-      "id": 5,
+      "id": 4,
       "prompt": "I don't have Docker installed, can I still run Claude without permissions?",
-      "expected_output": "Recommends Docker Desktop, mentions native /sandbox as lighter alternative",
+      "expected_output": "Recommends Docker Desktop 4.58+, mentions native /sandbox as lighter alternative",
       "files": [],
       "expectations": [
-        "Detects that Docker is not installed",
+        "Detects that Docker is not installed or sandbox unavailable",
         "Recommends installing Docker Desktop 4.58+",
         "Mentions native /sandbox command as lighter alternative",
         "Explains that native sandbox does not fully eliminate permission prompts",
