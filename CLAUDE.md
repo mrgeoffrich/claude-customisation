@@ -33,7 +33,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 - `hooks` — shell commands that run on lifecycle events (e.g. `SessionStart` to set up a Python venv)
 - `version`, `metadata` — optional; metadata supports `openclaw` fields like `category` and `requires`
 
-## The four plugins
+## The five plugins
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
@@ -41,6 +41,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 | `web-dev` | `nextjs-starter` | Scaffolds Next.js + shadcn/ui + Tailwind v4 + Prisma v7 |
 | `gws-skills` | `gws-gmail-compose` | Compose/reply/forward Gmail via `.eml` or `.md` draft files |
 | `dev-setup` | `cli-tips`, `statusline` | CLI tool recommendations; statusline install/update |
+| `sandbox` | `sandbox-launch` | Docker sandbox launcher for safe `--dangerously-skip-permissions` usage |
 
 ## Marketplace distribution
 

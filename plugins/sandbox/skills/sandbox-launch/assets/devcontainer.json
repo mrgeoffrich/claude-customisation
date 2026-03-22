@@ -1,0 +1,18 @@
+{
+    "name": "Claude Code Sandbox",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": [
+        "--cap-add=NET_ADMIN",
+        "--cap-add=NET_RAW"
+    ],
+    "postStartCommand": "sudo python3 /usr/local/bin/init-firewall.py",
+    "mounts": [
+        "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind"
+    ],
+    "containerEnv": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+    },
+    "remoteUser": "node"
+}

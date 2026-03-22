@@ -33,6 +33,15 @@ Drop-in plugins that extend what Claude Code can do. Each plugin is focused on a
 
 **`gws-gmail-compose`** — Compose, reply, forward, and send Gmail messages without touching raw base64 APIs. Write your email as a plain `.eml` file or a Markdown `.md` file (auto-converted to styled HTML), and the skill handles RFC 2822 encoding, threading headers, and the Gmail API call. Supports reply, reply-all, forward, and save-as-draft workflows. Requires the [gws CLI](https://github.com/googleworkspace/cli).
 
+### `sandbox` — Docker Sandbox Launcher
+
+```
+/plugin marketplace add mrgeoffrich/claude-customisation
+/plugin install sandbox@mrgeoffrich
+```
+
+**`sandbox-launch`** — Launch Claude Code in an isolated Docker environment with `--dangerously-skip-permissions` enabled safely. Detects your Docker setup and recommends Docker Desktop Sandboxes (microVM-based, strongest isolation) or generates a devcontainer with iptables firewall as fallback. Auto-detects project package managers to configure network allowlists. Handles credential forwarding, network isolation, and workspace security. Pre-installed tools in Docker Sandboxes include Git, GitHub CLI, Node.js, Python 3, Go, and a private Docker daemon.
+
 ### `dev-setup` — Developer Setup
 
 ```
