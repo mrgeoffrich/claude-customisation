@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 from collections import OrderedDict
+from datetime import datetime, timedelta
 
 
 def get_network_log() -> str:
@@ -32,37 +33,54 @@ def get_network_log() -> str:
 def parse_section(output: str, section: str) -> list[dict[str, str]]:
     """Parse a section (Blocked/Allowed) from network log output.
 
+    Uses column positions from the header line to correctly handle
+    multi-word fields like '<default policy>' and 'HH:MM:SS DD-Mon'.
+
     Returns list of dicts with keys: sandbox, host, rule, last_seen, count.
     """
     entries: list[dict[str, str]] = []
     in_section = False
+    col_starts: dict[str, int] | None = None
     for line in output.splitlines():
         if line.startswith(f"{section} requests:"):
             in_section = True
+            col_starts = None
             continue
-        if in_section and line.strip() and not line.startswith(f"{section}"):
-            # Check if we've hit another section
-            if line.endswith("requests:"):
-                in_section = False
-                continue
-            # Skip header
-            if line.startswith("SANDBOX") or not line.strip():
-                continue
-            parts = line.split()
-            if len(parts) >= 5:
-                try:
-                    count = int(parts[-1])
-                except ValueError:
-                    count = 1
-                entries.append({
-                    "sandbox": parts[0],
-                    "host": parts[1],
-                    "rule": parts[2],
-                    "count": count,
-                })
-            elif parts:
-                print(f"  Warning: could not parse network log line: {line!r}",
-                      file=sys.stderr)
+        if not in_section or not line.strip():
+            continue
+        if line.endswith("requests:"):
+            in_section = False
+            continue
+        # Parse header to determine column positions
+        if line.startswith("SANDBOX"):
+            col_starts = {
+                "sandbox": line.index("SANDBOX"),
+                "host": line.index("HOST"),
+                "rule": line.index("RULE"),
+                "last_seen": line.index("LAST SEEN"),
+                "count": line.index("COUNT"),
+            }
+            continue
+        if col_starts is None:
+            continue
+        try:
+            sandbox = line[col_starts["sandbox"]:col_starts["host"]].strip()
+            host = line[col_starts["host"]:col_starts["rule"]].strip()
+            rule = line[col_starts["rule"]:col_starts["last_seen"]].strip()
+            last_seen = line[col_starts["last_seen"]:col_starts["count"]].strip()
+            count_str = line[col_starts["count"]:].strip()
+            count = int(count_str)
+        except (ValueError, IndexError):
+            print(f"  Warning: could not parse network log line: {line!r}",
+                  file=sys.stderr)
+            continue
+        entries.append({
+            "sandbox": sandbox,
+            "host": host,
+            "rule": rule,
+            "last_seen": last_seen,
+            "count": count,
+        })
     return entries
 
 
@@ -71,17 +89,50 @@ def parse_allowed_hosts(output: str) -> set[str]:
     return {entry["host"] for entry in parse_section(output, "Allowed")}
 
 
-def parse_blocked(output: str) -> OrderedDict[str, int]:
+def parse_last_seen(last_seen: str) -> datetime | None:
+    """Parse 'HH:MM:SS DD-Mon' timestamp as local-timezone-aware datetime.
+
+    Docker Desktop logs timestamps in the host's local timezone.
+    """
+    try:
+        now = datetime.now().astimezone()  # tz-aware local time
+        local_tz = now.tzinfo
+        # Append current year so strptime has a full date (avoids Python 3.15
+        # deprecation warning about yearless day-of-month parsing).
+        dt = datetime.strptime(f"{last_seen} {now.year}", "%H:%M:%S %d-%b %Y")
+        dt = dt.replace(tzinfo=local_tz)
+        # If parsed date is in the future, it's from last year
+        if dt > now:
+            dt = dt.replace(year=now.year - 1)
+        return dt
+    except ValueError:
+        return None
+
+
+def parse_blocked(output: str, max_age: timedelta | None = None) -> OrderedDict[str, dict]:
     """Parse blocked requests, excluding hosts that are now allowed.
 
     The network log keeps historical blocked entries even after a rule
     is added. Filter those out by checking the allowed section.
+    Entries older than max_age (default 1 hour) are also excluded.
+
+    Returns OrderedDict mapping host -> {"count": int, "last_seen": str}.
     """
+    if max_age is None:
+        max_age = timedelta(hours=1)
+    cutoff = datetime.now().astimezone() - max_age
     allowed_hosts = parse_allowed_hosts(output)
-    blocked: OrderedDict[str, int] = OrderedDict()
+    blocked: OrderedDict[str, dict] = OrderedDict()
     for entry in parse_section(output, "Blocked"):
-        if entry["host"] not in allowed_hosts:
-            blocked[entry["host"]] = entry["count"]
+        if entry["host"] in allowed_hosts:
+            continue
+        dt = parse_last_seen(entry["last_seen"])
+        if dt is not None and dt < cutoff:
+            continue
+        blocked[entry["host"]] = {
+            "count": entry["count"],
+            "last_seen": entry["last_seen"],
+        }
     return blocked
 
 
@@ -151,7 +202,7 @@ def prompt_blocking(prompt_text: str) -> str:
 # ── Screens ──────────────────────────────────────────────────────────────
 
 
-def show_blocked_screen(sandbox_name: str, blocked: OrderedDict[str, int],
+def show_blocked_screen(sandbox_name: str, blocked: OrderedDict[str, dict],
                         allowed_this_session: list[str]) -> None:
     """Display the blocked domains polling screen."""
     clear_screen()
@@ -165,10 +216,10 @@ def show_blocked_screen(sandbox_name: str, blocked: OrderedDict[str, int],
     if not blocked:
         print("\nNo blocked requests detected.")
     else:
-        print(f"\n{'#':<4} {'Host':<45} {'Count':>5}")
-        print("-" * 56)
-        for i, (host, count) in enumerate(blocked.items(), 1):
-            print(f"{i:<4} {host:<45} {count:>5}")
+        print(f"\n{'#':<4} {'Host':<45} {'Last seen':<16} {'Count':>5}")
+        print("-" * 72)
+        for i, (host, info) in enumerate(blocked.items(), 1):
+            print(f"{i:<4} {host:<45} {info['last_seen']:<16} {info['count']:>5}")
 
     print()
     print("Commands:")
