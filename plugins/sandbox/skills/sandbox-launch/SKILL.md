@@ -34,7 +34,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/detect-environment.py"
 Parse the key=value output. Present the findings to the user in a concise summary:
 - OS and Docker version
 - Whether Docker Sandboxes are available (Docker Desktop 4.58+)
-- Whether API keys are configured
+- Whether GitHub token is configured
 - Detected package managers (for network allowlist)
 - Any existing sandboxes for this project directory
 
@@ -68,13 +68,12 @@ Docker enforces one sandbox per directory.
 
 ### Step 2 — Verify credentials
 
-If `api_key_set=false`, warn the user:
-- `ANTHROPIC_API_KEY` must be set as a host environment variable (in `~/.bashrc` or `~/.zshrc`)
-- Docker Desktop must be restarted after setting it (the daemon reads env vars at startup)
-- The key is injected via a proxy and never stored inside the sandbox VM
+Claude account credentials are automatically proxied into the sandbox by Docker Desktop —
+no `ANTHROPIC_API_KEY` is required.
 
 If `github_token_set=false`, mention that `GITHUB_TOKEN` or `GH_TOKEN` should be set for
-`gh` CLI and `git push` to work inside the sandbox. Same proxy injection mechanism.
+`gh` CLI and `git push` to work inside the sandbox. The token is injected via proxy and
+never stored inside the sandbox VM.
 
 ### Step 3 — Launch
 
