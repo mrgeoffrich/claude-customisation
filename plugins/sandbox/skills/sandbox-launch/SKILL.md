@@ -27,6 +27,11 @@ risking your host system. A post-launch setup script configures the sandbox with
 
 Requires Docker Desktop 4.58+.
 
+Each sandbox is tied to a single project directory — Docker enforces one sandbox per directory,
+and network allowlist rules are scoped to that sandbox. If the user works on multiple projects,
+they will need a separate sandbox for each one. Mention this upfront so the user understands
+the sandbox they are about to create is project-specific.
+
 ## Phase 1 — Detect environment
 
 Run the detection script to determine what Docker capabilities are available:
