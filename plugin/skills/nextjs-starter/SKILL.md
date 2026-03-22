@@ -1,5 +1,5 @@
 ---
-name: create-app
+name: nextjs-starter
 description: Scaffold a new full-stack Next.js application with shadcn/ui components, Tailwind CSS v4, Prisma ORM, dark mode theming, and a polished landing page. Use this skill whenever the user wants to start a new project, create a new app, bootstrap a Next.js application, set up a full-stack starter, or mentions wanting shadcn + Prisma + Next.js together. Also trigger when someone says "new app", "start a project", "bootstrap", "scaffold", or "create a starter" in the context of web development.
 allowed-tools: Bash, Write, Edit, Read, Glob, Grep, AskUserQuestion
 ---
