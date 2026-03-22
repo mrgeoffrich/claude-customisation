@@ -111,6 +111,28 @@ def detect_project() -> dict:
     return info
 
 
+def detect_ls_colors() -> bool:
+    """Check if the user has ls color output configured on the host."""
+    # Check environment variables
+    if os.environ.get("CLICOLOR") or os.environ.get("LS_COLORS") or os.environ.get("LSCOLORS"):
+        return True
+
+    # Check shell profiles for ls color aliases or env vars
+    home = Path.home()
+    color_patterns = ("ls -G", "ls --color", "CLICOLOR", "LS_COLORS", "LSCOLORS")
+    for rc in (".zshrc", ".bashrc", ".bash_profile", ".profile"):
+        rc_path = home / rc
+        if rc_path.is_file():
+            try:
+                content = rc_path.read_text()
+                for pattern in color_patterns:
+                    if pattern in content:
+                        return True
+            except OSError:
+                continue
+    return False
+
+
 def detect_package_managers() -> str:
     cwd = Path.cwd()
     managers = []
@@ -151,6 +173,7 @@ def main():
 
     results.update(detect_credentials())
     results.update(detect_project())
+    results["ls_colors"] = detect_ls_colors()
     results["package_managers"] = detect_package_managers()
 
     # Output as key=value pairs (booleans as lowercase strings)

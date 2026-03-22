@@ -25,6 +25,7 @@ detect_docker = mod.detect_docker
 detect_sandbox = mod.detect_sandbox
 detect_credentials = mod.detect_credentials
 detect_project = mod.detect_project
+detect_ls_colors = mod.detect_ls_colors
 detect_package_managers = mod.detect_package_managers
 main = mod.main
 
@@ -280,6 +281,70 @@ def test_detect_package_managers_bundler(tmp_path, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# detect_ls_colors()
+# ---------------------------------------------------------------------------
+
+
+def test_detect_ls_colors_from_env(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    with patch.dict(os.environ, {"CLICOLOR": "1"}, clear=False), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        assert detect_ls_colors() is True
+
+
+def test_detect_ls_colors_from_ls_colors_env(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    with patch.dict(os.environ, {"LS_COLORS": "di=34:ln=35"}, clear=False), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        assert detect_ls_colors() is True
+
+
+def test_detect_ls_colors_from_zshrc(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    (fake_home / ".zshrc").write_text("alias ls='ls -G'\n")
+    env = os.environ.copy()
+    env.pop("CLICOLOR", None)
+    env.pop("LS_COLORS", None)
+    env.pop("LSCOLORS", None)
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        assert detect_ls_colors() is True
+
+
+def test_detect_ls_colors_from_bashrc_color_flag(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    (fake_home / ".bashrc").write_text("alias ls='ls --color=auto'\n")
+    env = os.environ.copy()
+    env.pop("CLICOLOR", None)
+    env.pop("LS_COLORS", None)
+    env.pop("LSCOLORS", None)
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        assert detect_ls_colors() is True
+
+
+def test_detect_ls_colors_none(tmp_path):
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    env = os.environ.copy()
+    env.pop("CLICOLOR", None)
+    env.pop("LS_COLORS", None)
+    env.pop("LSCOLORS", None)
+    with patch.dict(os.environ, env, clear=True), patch.object(
+        Path, "home", return_value=fake_home
+    ):
+        assert detect_ls_colors() is False
+
+
+# ---------------------------------------------------------------------------
 # main() output format
 # ---------------------------------------------------------------------------
 
@@ -311,6 +376,7 @@ def test_main_output_format(capsys, tmp_path, monkeypatch):
     assert "sandbox_available" in keys
     assert "api_key_set" in keys
     assert "github_token_in_profile" in keys
+    assert "ls_colors" in keys
     assert "package_managers" in keys
 
     # Booleans should be lowercase strings
@@ -318,3 +384,4 @@ def test_main_output_format(capsys, tmp_path, monkeypatch):
     assert kv["docker_installed"] in ("true", "false")
     assert kv["sandbox_available"] in ("true", "false")
     assert kv["api_key_set"] in ("true", "false")
+    assert kv["ls_colors"] in ("true", "false")

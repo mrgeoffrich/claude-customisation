@@ -24,6 +24,7 @@ from pathlib import Path
 
 
 SETUP_MARKER = "# sandbox-launch: setup"
+LS_COLORS_MARKER = "# sandbox-launch: ls-colors"
 WELCOME_MARKER = "# sandbox-launch: welcome"
 STARSHIP_MARKER = "# sandbox-launch: starship"
 
@@ -66,6 +67,24 @@ def setup_shell(project_dir: str, rc_path: Path) -> None:
             print("  GitHub token: not found in environment (gh/git push won't work)")
     else:
         print(f"  Shell already configured: {rc_path}")
+
+
+def setup_ls_colors(rc_path: Path) -> None:
+    """Enable colored ls output if the host had it configured.
+
+    Controlled by the SANDBOX_LS_COLORS env var (set by the caller based
+    on detect-environment.py output).
+    """
+    if not os.environ.get("SANDBOX_LS_COLORS"):
+        print("  LS colors: skipped (not configured on host)")
+        return
+    lines = [
+        "alias ls='ls --color=auto'",
+    ]
+    if append_if_missing(rc_path, LS_COLORS_MARKER, lines):
+        print("  LS colors: enabled")
+    else:
+        print("  LS colors: already configured")
 
 
 def setup_permissions() -> None:
@@ -175,6 +194,7 @@ def main() -> None:
 
     print("Setting up sandbox...")
     setup_shell(project_dir, rc_path)
+    setup_ls_colors(rc_path)
     setup_permissions()
     setup_welcome(project_dir, sandbox_name, rc_path)
     starship_status = setup_starship(project_dir, rc_path)

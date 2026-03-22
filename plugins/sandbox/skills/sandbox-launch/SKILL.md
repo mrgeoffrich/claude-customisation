@@ -40,6 +40,7 @@ Parse the key=value output. Present the findings to the user in a concise summar
 - Whether Docker Sandboxes are available (Docker Desktop 4.58+)
 - Whether GitHub token is configured
 - Detected package managers (for network allowlist)
+- Whether colored `ls` output is configured on the host
 - Any existing sandboxes for this project directory
 
 If `sandbox_available=false`, tell the user Docker Desktop 4.58+ is required and recommend
@@ -122,22 +123,28 @@ ensure `starship.rs` and `*.starship.rs` are in the allowlist before running set
 install script downloads from `starship.rs` and the binary from `github.com`).
 
 **Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
-sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM):
+sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM).
+If `ls_colors=true` was detected, also pass `SANDBOX_LS_COLORS=1` so the setup script
+enables colored `ls` output inside the sandbox:
 
 ```bash
-docker sandbox exec -e GH_TOKEN="$GH_TOKEN" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir> <sandbox-name>
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir> <sandbox-name>
 ```
+
+Only include `-e SANDBOX_LS_COLORS="1"` if `ls_colors=true` in the detection output.
 
 The `setup-sandbox.py` script configures:
 1. **Working directory** — appends `cd <project_dir>` to `.bashrc` so `docker sandbox exec`
    sessions land in the project folder, not the workspace root
 2. **`yolo` alias** — `alias yolo='claude --dangerously-skip-permissions'` so the user can
    type `yolo` to launch Claude Code with all permissions bypassed
-3. **Claude Code permissions** — writes `bypassPermissions` mode and
+3. **LS colors** — if `SANDBOX_LS_COLORS` is set, adds `alias ls='ls --color=auto'` to
+   `.bashrc` so `ls` output matches the host's colored style
+4. **Claude Code permissions** — writes `bypassPermissions` mode and
    `skipDangerousModePermissionPrompt: true` to `~/.claude/settings.json` inside the sandbox
-4. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
+5. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
    so `docker sandbox exec` sessions display sandbox name, project dir, and environment controls
-5. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
+6. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
    copies the config to `~/.config/starship.toml`, adds PATH and `eval "$(starship init bash)"`
    to `.bashrc`, then removes the staged file
 
