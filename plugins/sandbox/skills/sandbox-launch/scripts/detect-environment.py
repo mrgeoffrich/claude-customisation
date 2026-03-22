@@ -8,16 +8,13 @@ Uses only Python 3 stdlib — no pip dependencies.
 import os
 import platform
 import subprocess
-import sys
 from pathlib import Path
 
 
 def run(cmd: list[str], timeout: int = 10) -> tuple[int, str]:
     """Run a command and return (returncode, stdout). Never raises."""
     try:
-        result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout
-        )
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
         return result.returncode, result.stdout.strip()
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
         return 1, ""
@@ -104,7 +101,9 @@ def detect_package_managers() -> str:
         managers.append("yarn")
     if (cwd / "pnpm-lock.yaml").exists():
         managers.append("pnpm")
-    if any((cwd / f).exists() for f in ("requirements.txt", "pyproject.toml", "Pipfile")):
+    if any(
+        (cwd / f).exists() for f in ("requirements.txt", "pyproject.toml", "Pipfile")
+    ):
         managers.append("pip")
     if (cwd / "Gemfile").exists():
         managers.append("bundler")
@@ -112,7 +111,7 @@ def detect_package_managers() -> str:
         managers.append("go")
     if (cwd / "Cargo.toml").exists():
         managers.append("cargo")
-    if (cwd / ".github").is_dir():
+    if (cwd / ".git").is_dir():
         managers.append("github")
 
     return ",".join(managers)
