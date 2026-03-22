@@ -10,6 +10,7 @@ What it does:
 - Adds a `yolo` alias for `claude --dangerously-skip-permissions`
 - Configures Claude Code with bypassPermissions mode
 - Installs and configures Starship prompt if .starship.toml is staged
+- Writes sandbox info and adds a welcome message on shell entry
 
 Uses only Python 3 stdlib — no pip dependencies.
 """
@@ -24,6 +25,7 @@ from pathlib import Path
 
 
 SETUP_MARKER = "# sandbox-launch: setup"
+WELCOME_MARKER = "# sandbox-launch: welcome"
 STARSHIP_MARKER = "# sandbox-launch: starship"
 
 
@@ -102,6 +104,30 @@ def setup_permissions() -> None:
     print("  Permissions: bypassPermissions (skip prompt suppressed)")
 
 
+def setup_welcome(project_dir: str, sandbox_name: str, rc_path: Path) -> None:
+    """Write sandbox info file and add welcome script to shell rc."""
+    home = Path.home()
+
+    # Write ~/.sandbox-info for the welcome script to read
+    info_file = home / ".sandbox-info"
+    info_file.write_text(
+        f"sandbox_name={sandbox_name}\n"
+        f"project_dir={project_dir}\n"
+    )
+
+    # Path to the welcome script (synced into sandbox at same absolute path)
+    welcome_script = (
+        Path(project_dir)
+        / "plugins/sandbox/skills/sandbox-launch/scripts/sandbox-welcome.py"
+    )
+
+    lines = [f'python3 "{welcome_script}" 2>/dev/null']
+    if append_if_missing(rc_path, WELCOME_MARKER, lines):
+        print(f"  Welcome message: enabled")
+    else:
+        print(f"  Welcome message: already configured")
+
+
 def setup_starship(project_dir: str, rc_path: Path) -> str:
     """Install and configure Starship if .starship.toml is staged."""
     staged = Path(project_dir) / ".starship.toml"
@@ -161,16 +187,18 @@ def setup_starship(project_dir: str, rc_path: Path) -> str:
 
 
 def main() -> None:
-    if len(sys.argv) < 2:
-        print(f"Usage: {sys.argv[0]} <project_dir>", file=sys.stderr)
+    if len(sys.argv) < 3:
+        print(f"Usage: {sys.argv[0]} <project_dir> <sandbox_name>", file=sys.stderr)
         sys.exit(1)
 
     project_dir = sys.argv[1]
+    sandbox_name = sys.argv[2]
     rc_path = get_shell_rc()
 
     print("Setting up sandbox...")
     setup_shell(project_dir, rc_path)
     setup_permissions()
+    setup_welcome(project_dir, sandbox_name, rc_path)
     starship_status = setup_starship(project_dir, rc_path)
 
     print()

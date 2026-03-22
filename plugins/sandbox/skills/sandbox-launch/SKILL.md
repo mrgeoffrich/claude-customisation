@@ -125,7 +125,7 @@ install script downloads from `starship.rs` and the binary from `github.com`).
 sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM):
 
 ```bash
-docker sandbox exec -e GH_TOKEN="$GH_TOKEN" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir>
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" <sandbox-name> python3 <project_dir>/plugins/sandbox/skills/sandbox-launch/scripts/setup-sandbox.py <project_dir> <sandbox-name>
 ```
 
 The `setup-sandbox.py` script configures:
@@ -135,18 +135,21 @@ The `setup-sandbox.py` script configures:
    type `yolo` to launch Claude Code with all permissions bypassed
 3. **Claude Code permissions** — writes `bypassPermissions` mode and
    `skipDangerousModePermissionPrompt: true` to `~/.claude/settings.json` inside the sandbox
-4. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
+4. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
+   so `docker sandbox exec` sessions display sandbox name, project dir, and environment controls
+5. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
    copies the config to `~/.config/starship.toml`, adds PATH and `eval "$(starship init bash)"`
    to `.bashrc`, then removes the staged file
 
 The script is idempotent — it checks for markers before appending to `.bashrc` and merges
 into existing `settings.json` if present.
 
-### Step 4 — Configure network (optional)
+### Step 4 — Configure network
 
-Ask the user if they want strict network isolation (deny-by-default). If yes, use the detected
-package managers to build an allowlist. Read `${CLAUDE_SKILL_DIR}/references/network-allowlist.md`
-for the domain mapping table.
+Always apply deny-by-default network isolation. Do not ask the user — this is a security default.
+
+Use the detected package managers to build the allowlist. Read
+`${CLAUDE_SKILL_DIR}/references/network-allowlist.md` for the domain mapping table.
 
 Always include these infrastructure domains:
 ```bash
@@ -174,18 +177,10 @@ Add Starship download domains if the setup script will install Starship:
   --allow-host "*.starship.rs"
 ```
 
-Add web search domains if Claude should be able to search the web inside the sandbox:
-```bash
-  --allow-host "google.com" \
-  --allow-host "www.google.com" \
-  --allow-host "stackoverflow.com" \
-  --allow-host "*.stackoverflow.com"
-```
-
 Then add package manager domains based on the detected package managers — refer to
 `${CLAUDE_SKILL_DIR}/references/network-allowlist.md` for the domain mapping table.
 
-Also ask whether the project calls any external APIs and add those domains.
+Ask the user whether the project calls any external APIs and add those domains too.
 
 Additional domains can be added later without recreating the sandbox:
 ```bash
