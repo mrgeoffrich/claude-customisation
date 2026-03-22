@@ -7,7 +7,7 @@ description: >
   "skip permissions safely", "isolated mode", "containerise claude", "dangerously-skip-permissions",
   "run unattended", "autonomous mode", "headless claude", "docker sandbox", "launch sandbox". Do NOT trigger for the built-in /sandbox command — this skill is for Docker-based full VM isolation, not the native OS-level sandbox.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep
-version: "0.1.0"
+version: "0.2.0"
 metadata:
   openclaw:
     category: "dev-tools"
@@ -19,11 +19,19 @@ metadata:
 
 Set up and launch Claude Code in a Docker Desktop Sandbox — a microVM with its own Linux kernel.
 The sandbox provides filesystem and network isolation so Claude can operate autonomously without
-risking your host system. A post-launch setup script configures the sandbox with:
-- A `yolo` alias that runs `claude --dangerously-skip-permissions`
+risking your host system.
+
+The sandbox uses a pre-built template image (`cc-sandbox:latest`) that bakes in static config:
+- `yolo` alias → `claude --dangerously-skip-permissions`
 - `bypassPermissions` mode in Claude Code settings
+- Colored `ls` output
+- Starship prompt binary (pre-installed, no download needed at launch)
+
+A lightweight setup script then applies per-project dynamic config:
 - Automatic `cd` to the project directory on shell entry
-- Starship prompt (if the host has `~/.config/starship.toml`)
+- GitHub token and OAuth token exports
+- Starship config file from the host
+- Welcome message with sandbox info
 
 Requires Docker Desktop 4.58+.
 
@@ -45,7 +53,6 @@ Parse the key=value output. Present the findings to the user in a concise summar
 - Whether Docker Sandboxes are available (Docker Desktop 4.58+)
 - Whether GitHub token is configured
 - Detected package managers (for network allowlist)
-- Whether colored `ls` output is configured on the host
 - Any existing sandboxes for this project directory
 
 If `sandbox_available=false`, tell the user Docker Desktop 4.58+ is required and recommend
@@ -59,19 +66,34 @@ Present what the sandbox will do and ask the user to confirm before proceeding:
 - A microVM will be created with its own kernel and private Docker daemon
 - Files sync bidirectionally at the same absolute path
 - Credentials (Claude account, GitHub token) are injected via proxy (never stored in the VM)
-- A setup script will configure the sandbox with:
-  - `yolo` alias → `claude --dangerously-skip-permissions`
-  - `bypassPermissions` mode in Claude Code settings (suppresses permission prompts)
-  - Auto-`cd` to the project directory when shelling in
-  - Starship prompt with the host's config (if `~/.config/starship.toml` exists)
+- The template image includes: `yolo` alias, `bypassPermissions`, Starship, colored `ls`
+- A setup script will apply project-specific config (working directory, tokens, welcome message)
 
 ## Phase 3 — Launch
 
-**Pre-installed tools**: Claude Code, Git, GitHub CLI (`gh`), Node.js, Python 3, Go, ripgrep,
-jq, and a private Docker daemon. The `agent` user has sudo access for installing additional
-packages.
+**Pre-installed tools** (in the template image): Claude Code, Git, GitHub CLI (`gh`), Node.js,
+Python 3, Go, ripgrep, jq, Starship prompt, and a private Docker daemon. The `agent` user has
+sudo access for installing additional packages.
 
-### Step 1 — Check for existing sandboxes
+### Step 1 — Build template image (if needed)
+
+Run the build script to ensure the `cc-sandbox:latest` template image exists and is up-to-date:
+
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/build-template.py"
+```
+
+Parse the key=value output:
+- `action=none` — template is up-to-date, proceed
+- `action=built` — template was built for the first time
+- `action=rebuilt` — template was rebuilt because the base image changed
+
+If the script fails, show the error and stop. The template image is required.
+
+On first run this pulls the base image and builds the template (may take a minute). Subsequent
+launches skip this step entirely unless the base image has been updated.
+
+### Step 2 — Check for existing sandboxes
 
 ```bash
 docker sandbox ls
@@ -80,7 +102,7 @@ docker sandbox ls
 If a sandbox already exists for this directory, ask whether to reuse it or remove and recreate.
 Docker enforces one sandbox per directory.
 
-### Step 2 — Verify credentials
+### Step 3 — Verify credentials
 
 Claude account credentials are automatically proxied into the sandbox by Docker Desktop —
 no `ANTHROPIC_API_KEY` is required.
@@ -102,16 +124,16 @@ Important details for GitHub token setup:
   pick it up
 - The token is injected via proxy and never stored inside the sandbox VM
 
-### Step 3 — Launch
+### Step 4 — Launch sandbox
 
 ```bash
-docker sandbox run claude "$(pwd)"
+docker sandbox run -t cc-sandbox:latest claude "$(pwd)"
 ```
 
-This launches Claude Code in a microVM with bidirectional file sync. Files appear at the same
-absolute path inside the sandbox.
+This launches the sandbox from the pre-built template with all static config already in place.
+Files appear at the same absolute path inside the sandbox via bidirectional sync.
 
-### Step 3.5 — Generate authentication token
+### Step 4.5 — Generate authentication token
 
 Claude Code requires authentication when it first starts. On the host Mac, this opens a browser
 automatically — but inside the headless sandbox VM there is no browser, so the auto-open fails
@@ -136,21 +158,19 @@ the next step via the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
 If the user does not have a Pro/Max subscription, skip this step — they can authenticate
 manually inside the sandbox by pressing `c` to copy the login URL when prompted.
 
-### Step 3.6 — Run setup script
+### Step 4.6 — Run setup script
 
-After the sandbox is created, run the setup script inside it to configure the environment.
+After the sandbox is created, run the lightweight setup script for per-project config.
 
-**Starship prompt**: Check if `~/.config/starship.toml` exists on the host. If it does, copy
+**Starship config**: Check if `~/.config/starship.toml` exists on the host. If it does, copy
 it into the project directory (which is synced into the sandbox) so the setup script can
-detect and install Starship:
+install it:
 
 ```bash
 cp ~/.config/starship.toml <project_dir>/.starship.toml
 ```
 
-The staged file is cleaned up automatically after setup. If network isolation is enabled,
-ensure `starship.rs` and `*.starship.rs` are in the allowlist before running setup (the
-install script downloads from `starship.rs` and the binary from `github.com`).
+The staged file is cleaned up automatically after setup.
 
 **Stage the setup script** — copy it into the project directory (which is synced into the
 sandbox) so it's accessible inside the VM. `${CLAUDE_SKILL_DIR}` resolves to a host path
@@ -161,18 +181,14 @@ cp ${CLAUDE_SKILL_DIR}/scripts/setup-sandbox.py <project_dir>/.setup-sandbox.py
 ```
 
 **Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
-sandbox's shell profile (the Docker credential proxy does not set env vars inside the VM).
-If `ls_colors=true` was detected, also pass `SANDBOX_LS_COLORS=1` so the setup script
-enables colored `ls` output inside the sandbox. If an OAuth token was generated in Step 3.5,
-pass it via `CLAUDE_CODE_OAUTH_TOKEN` so the setup script writes it into the sandbox's shell
-profile for headless authentication:
+sandbox's shell profile. If an OAuth token was generated in Step 4.5, pass it via
+`CLAUDE_CODE_OAUTH_TOKEN`:
 
 ```bash
-docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e SANDBOX_LS_COLORS="1" -e CLAUDE_CODE_OAUTH_TOKEN="<token>" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
+docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e CLAUDE_CODE_OAUTH_TOKEN="<token>" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
 ```
 
-Only include `-e SANDBOX_LS_COLORS="1"` if `ls_colors=true` in the detection output.
-Only include `-e CLAUDE_CODE_OAUTH_TOKEN="<token>"` if a token was generated in Step 3.5.
+Only include `-e CLAUDE_CODE_OAUTH_TOKEN="<token>"` if a token was generated in Step 4.5.
 
 **Clean up** — remove the staged script from the project directory after setup completes:
 
@@ -183,24 +199,17 @@ rm -f <project_dir>/.setup-sandbox.py
 The `setup-sandbox.py` script configures:
 1. **Working directory** — appends `cd <project_dir>` to `.bashrc` so `docker sandbox exec`
    sessions land in the project folder, not the workspace root
-2. **`yolo` alias** — `alias yolo='claude --dangerously-skip-permissions'` so the user can
-   type `yolo` to launch Claude Code with all permissions bypassed
-3. **LS colors** — if `SANDBOX_LS_COLORS` is set, adds `alias ls='ls --color=auto'` to
-   `.bashrc` so `ls` output matches the host's colored style
-4. **Auth token** — if `CLAUDE_CODE_OAUTH_TOKEN` is set, exports it in `.bashrc` so Claude
+2. **GitHub token** — exports `GH_TOKEN` in `.bashrc` if provided
+3. **Auth token** — if `CLAUDE_CODE_OAUTH_TOKEN` is set, exports it in `.bashrc` so Claude
    Code authenticates without opening a browser (each sandbox needs its own unique token)
-5. **Claude Code permissions** — writes `bypassPermissions` mode and
-   `skipDangerousModePermissionPrompt: true` to `~/.claude/settings.json` inside the sandbox
-6. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
+4. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
    so `docker sandbox exec` sessions display sandbox name, project dir, and environment controls
-7. **Starship prompt** — if `.starship.toml` was staged, installs Starship to `~/.local/bin`,
-   copies the config to `~/.config/starship.toml`, adds PATH and `eval "$(starship init bash)"`
-   to `.bashrc`, then removes the staged file
+5. **Starship config** — if `.starship.toml` was staged, copies it to `~/.config/starship.toml`
+   (the binary is already installed in the template image)
 
-The script is idempotent — it checks for markers before appending to `.bashrc` and merges
-into existing `settings.json` if present.
+The script is idempotent — it checks for markers before appending to `.bashrc`.
 
-### Step 4 — Configure network
+### Step 5 — Configure network
 
 Always apply deny-by-default network isolation. Do not ask the user — this is a security default.
 
@@ -227,12 +236,6 @@ docker sandbox network proxy <sandbox-name> \
   --allow-host "*.r2.cloudflarestorage.com"
 ```
 
-Add Starship download domains if the setup script will install Starship:
-```bash
-  --allow-host "starship.rs" \
-  --allow-host "*.starship.rs"
-```
-
 Then add package manager domains based on the detected package managers — refer to
 `${CLAUDE_SKILL_DIR}/references/network-allowlist.md` for the domain mapping table.
 
@@ -253,7 +256,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/network-monitor.py <sandbox-name>
 The monitor shows a numbered list of blocked domains. The user can type a number to allow a
 single domain, `a` to allow all, `r` to refresh, or `q` to quit.
 
-### Step 5 — Summary
+### Step 6 — Summary
 
 Tell the user what is now running and how to manage it:
 
@@ -284,13 +287,10 @@ To monitor and manage blocked network traffic, run:
 
 ## Custom templates (advanced)
 
-For users who want reproducible sandbox environments, Docker Sandboxes support custom templates.
-This is useful for teams or projects with specific toolchain requirements.
-
-Create a Dockerfile extending the base image:
+For users who want to further customize the template, they can extend `cc-sandbox:latest`:
 
 ```dockerfile
-FROM docker/sandbox-templates:claude-code
+FROM cc-sandbox:latest
 
 USER root
 RUN apt-get update && apt-get install -y <additional-packages>
