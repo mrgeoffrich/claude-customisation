@@ -62,11 +62,22 @@ def parse_section(output: str, section: str) -> list[dict[str, str]]:
     return entries
 
 
+def parse_allowed_hosts(output: str) -> set[str]:
+    """Extract unique hosts from the allowed requests section."""
+    return {entry["host"] for entry in parse_section(output, "Allowed")}
+
+
 def parse_blocked(output: str) -> OrderedDict[str, int]:
-    """Parse blocked requests. Returns {host: count}."""
+    """Parse blocked requests, excluding hosts that are now allowed.
+
+    The network log keeps historical blocked entries even after a rule
+    is added. Filter those out by checking the allowed section.
+    """
+    allowed_hosts = parse_allowed_hosts(output)
     blocked: OrderedDict[str, int] = OrderedDict()
     for entry in parse_section(output, "Blocked"):
-        blocked[entry["host"]] = entry["count"]
+        if entry["host"] not in allowed_hosts:
+            blocked[entry["host"]] = entry["count"]
     return blocked
 
 
