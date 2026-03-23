@@ -11,6 +11,7 @@ into the cc-sandbox template image via the Dockerfile.
 What it does:
 - Sets the default working directory for the project
 - Exports GH_TOKEN and CLAUDE_CODE_OAUTH_TOKEN if provided
+- Sets terminal title with lock emoji prefix for sandbox sessions
 - Copies Starship config if .starship.toml is staged
 - Writes sandbox info and adds a welcome message on shell entry
 
@@ -26,6 +27,7 @@ SETUP_MARKER = "# sandbox-launch: setup"
 AUTH_MARKER = "# sandbox-launch: auth"
 WELCOME_MARKER = "# sandbox-launch: welcome"
 STARSHIP_CFG_MARKER = "# sandbox-launch: starship-config"
+TITLE_MARKER = "# sandbox-launch: terminal-title"
 
 
 def get_shell_rc() -> Path:
@@ -111,6 +113,17 @@ def setup_welcome(project_dir: str, sandbox_name: str, rc_path: Path) -> None:
         print("  Welcome message: already configured")
 
 
+def setup_terminal_title(sandbox_name: str, rc_path: Path) -> None:
+    """Set terminal title with lock emoji prefix to indicate sandbox session."""
+    lines = [
+        f'echo -ne "\\033]0;\\xF0\\x9F\\x94\\x92 {sandbox_name}\\007"',
+    ]
+    if append_if_missing(rc_path, TITLE_MARKER, lines):
+        print("  Terminal title: enabled")
+    else:
+        print("  Terminal title: already configured")
+
+
 def setup_starship_config(project_dir: str, rc_path: Path) -> str:
     """Copy Starship config if .starship.toml is staged.
 
@@ -149,6 +162,7 @@ def main() -> None:
     setup_shell(project_dir, rc_path)
     setup_auth(rc_path)
     setup_welcome(project_dir, sandbox_name, rc_path)
+    setup_terminal_title(sandbox_name, rc_path)
     starship_status = setup_starship_config(project_dir, rc_path)
 
     print()

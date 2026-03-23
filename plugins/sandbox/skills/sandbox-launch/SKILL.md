@@ -138,10 +138,12 @@ Important details for GitHub token setup:
 ### Step 4 — Launch sandbox
 
 ```bash
-docker sandbox run -t cc-sandbox:latest claude "$(pwd)"
+docker sandbox run --name "$(basename "$(pwd)")-cc" -t cc-sandbox:latest claude "$(pwd)"
 ```
 
-This launches the sandbox from the pre-built template with all static config already in place.
+The sandbox name uses the pattern `<directory>-cc` (e.g. `my-project-cc`). The `-cc` suffix
+identifies it as a Claude Code sandbox without the default `claude-` prefix that Docker adds.
+
 Files appear at the same absolute path inside the sandbox via bidirectional sync.
 
 ### Step 5 — Run setup script
@@ -190,7 +192,9 @@ The `setup-sandbox.py` script configures:
    Code authenticates without opening a browser (each sandbox needs its own unique token)
 4. **Welcome message** — writes `~/.sandbox-info` and adds the welcome script to `.bashrc`
    so `docker sandbox exec` sessions display sandbox name, project dir, and environment controls
-5. **Starship config** — if `.starship.toml` was staged, copies it to `~/.config/starship.toml`
+5. **Terminal title** — sets the terminal title to `🔒 <sandbox-name>` so sandbox sessions
+   are visually distinct from host terminals
+6. **Starship config** — if `.starship.toml` was staged, copies it to `~/.config/starship.toml`
    (the binary is already installed in the template image)
 
 The script is idempotent — it checks for markers before appending to `.bashrc`.
@@ -252,6 +256,7 @@ Tell the user what is now running and how to manage it:
 - The sandbox has its own Docker daemon for building/running containers
 - Type `yolo` inside the sandbox to launch Claude with `--dangerously-skip-permissions`
 - Shell sessions auto-`cd` to the project directory
+- Terminal title shows `🔒 <sandbox-name>` to distinguish sandbox from host terminals
 - Starship prompt is configured (if the host had `~/.config/starship.toml`)
 
 Key commands:

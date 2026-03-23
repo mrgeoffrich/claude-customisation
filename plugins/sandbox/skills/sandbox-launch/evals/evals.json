@@ -10,7 +10,7 @@
         "Runs detect-environment.py script",
         "Reports Docker version and sandbox availability",
         "Asks for confirmation before proceeding",
-        "Launches with docker sandbox run claude",
+        "Launches with docker sandbox run --name <dir>-cc claude",
         "Provides summary of isolation properties and management commands"
       ]
     },

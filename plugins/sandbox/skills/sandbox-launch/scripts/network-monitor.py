@@ -303,7 +303,7 @@ def select_sandbox() -> str:
     """Prompt the user to select a sandbox from the list."""
     sandboxes = list_sandboxes()
     if not sandboxes:
-        print("No sandboxes found. Create one first with: docker sandbox run claude \"$(pwd)\"")
+        print("No sandboxes found. Create one first with: docker sandbox run --name \"$(basename $(pwd))-cc\" claude \"$(pwd)\"")
         sys.exit(1)
     if len(sandboxes) == 1:
         print(f"Using sandbox: {sandboxes[0]}")
