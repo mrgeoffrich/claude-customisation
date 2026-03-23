@@ -69,6 +69,17 @@ Present what the sandbox will do and ask the user to confirm before proceeding:
 - The template image includes: `yolo` alias, `bypassPermissions`, Starship, colored `ls`
 - A setup script will apply project-specific config (working directory, tokens, welcome message)
 
+**Optional — pre-generate an auth token**: Claude Code requires authentication when it first
+starts. Inside the headless sandbox VM there is no browser, so the user must manually copy/paste
+a login URL. To avoid this, the user can run `claude setup-token` in their terminal **before
+confirming** (it requires a TTY and browser, so it cannot be run programmatically). This outputs
+a long-lived OAuth token (`sk-ant-oat01-...`) that will be injected into the sandbox during
+setup. Each sandbox requires its own unique token. Requires Claude Pro or Max subscription.
+
+Tell the user: if they want seamless auth, run `claude setup-token` now in a separate terminal
+and paste the token here. Otherwise they can skip this and authenticate manually inside the
+sandbox later (press `c` to copy the login URL when prompted).
+
 ## Phase 3 — Launch
 
 **Pre-installed tools** (in the template image): Claude Code, Git, GitHub CLI (`gh`), Node.js,
@@ -133,32 +144,7 @@ docker sandbox run -t cc-sandbox:latest claude "$(pwd)"
 This launches the sandbox from the pre-built template with all static config already in place.
 Files appear at the same absolute path inside the sandbox via bidirectional sync.
 
-### Step 4.5 — Generate authentication token
-
-Claude Code requires authentication when it first starts. On the host Mac, this opens a browser
-automatically — but inside the headless sandbox VM there is no browser, so the auto-open fails
-and the user must manually copy/paste a login URL. To avoid this, generate a dedicated OAuth
-token for this sandbox on the host before running the setup script.
-
-**Important**: Each sandbox requires its own unique token. Tokens must not be reused across
-sandboxes.
-
-**Requires**: Claude Pro or Max subscription.
-
-Run on the host:
-
-```bash
-claude setup-token
-```
-
-This opens the browser on the host for OAuth authentication and outputs a long-lived token
-(format: `sk-ant-oat01-...`). Capture this token — it will be passed into the sandbox in
-the next step via the `CLAUDE_CODE_OAUTH_TOKEN` environment variable.
-
-If the user does not have a Pro/Max subscription, skip this step — they can authenticate
-manually inside the sandbox by pressing `c` to copy the login URL when prompted.
-
-### Step 4.6 — Run setup script
+### Step 5 — Run setup script
 
 After the sandbox is created, run the lightweight setup script for per-project config.
 
@@ -181,14 +167,14 @@ cp ${CLAUDE_SKILL_DIR}/scripts/setup-sandbox.py <project_dir>/.setup-sandbox.py
 ```
 
 **Run the setup script** — pass `GH_TOKEN` via `-e` so the script can write it into the
-sandbox's shell profile. If an OAuth token was generated in Step 4.5, pass it via
+sandbox's shell profile. If the user provided an OAuth token during Phase 2, pass it via
 `CLAUDE_CODE_OAUTH_TOKEN`:
 
 ```bash
 docker sandbox exec -e GH_TOKEN="$GH_TOKEN" -e CLAUDE_CODE_OAUTH_TOKEN="<token>" <sandbox-name> python3 <project_dir>/.setup-sandbox.py <project_dir> <sandbox-name>
 ```
 
-Only include `-e CLAUDE_CODE_OAUTH_TOKEN="<token>"` if a token was generated in Step 4.5.
+Only include `-e CLAUDE_CODE_OAUTH_TOKEN="<token>"` if the user provided a token during Phase 2.
 
 **Clean up** — remove the staged script from the project directory after setup completes:
 
@@ -209,7 +195,7 @@ The `setup-sandbox.py` script configures:
 
 The script is idempotent — it checks for markers before appending to `.bashrc`.
 
-### Step 5 — Configure network
+### Step 6 — Configure network
 
 Always apply deny-by-default network isolation. Do not ask the user — this is a security default.
 
@@ -256,13 +242,13 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/network-monitor.py <sandbox-name>
 The monitor shows a numbered list of blocked domains. The user can type a number to allow a
 single domain, `a` to allow all, `r` to refresh, or `q` to quit.
 
-### Step 6 — Summary
+### Step 7 — Summary
 
 Tell the user what is now running and how to manage it:
 
 - Files sync bidirectionally — changes inside the sandbox appear on the host
 - Credentials are injected via proxy (never stored in the VM)
-- Authentication is pre-configured via OAuth token (no browser needed inside the sandbox)
+- If an OAuth token was provided, authentication is pre-configured (no browser needed inside the sandbox)
 - The sandbox has its own Docker daemon for building/running containers
 - Type `yolo` inside the sandbox to launch Claude with `--dangerously-skip-permissions`
 - Shell sessions auto-`cd` to the project directory
