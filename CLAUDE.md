@@ -37,7 +37,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| `security` | `security-review` | Multi-agent security audit; fans out parallel agents per attack surface |
+| `security` | `security-review`, `dependabot-fix` | Multi-agent security audit; Dependabot alert remediation with auto-PR |
 | `web-dev` | `nextjs-starter` | Scaffolds Next.js + shadcn/ui + Tailwind v4 + Prisma v7 |
 | `gws-skills` | `gws-gmail-compose` | Compose/reply/forward Gmail via `.eml` or `.md` draft files |
 | `dev-setup` | `cli-tips`, `statusline` | CLI tool recommendations; statusline install/update |

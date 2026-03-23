@@ -1,7 +1,7 @@
 {
   "name": "security",
   "version": "0.1.0",
-  "description": "Comprehensive security review skills for auditing codebases",
+  "description": "Security review and dependency vulnerability remediation skills for codebases",
   "author": {
     "name": "Geoffrey Rich"
   }

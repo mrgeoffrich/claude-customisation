@@ -10,7 +10,7 @@
     {
       "name": "security",
       "source": "./plugins/security",
-      "description": "Comprehensive security review skills for auditing codebases",
+      "description": "Security review and dependency vulnerability remediation skills for codebases",
       "version": "0.1.0",
       "author": {
         "name": "Geoffrey Rich"
