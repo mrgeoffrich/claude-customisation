@@ -42,6 +42,15 @@
       "author": {
         "name": "Geoffrey Rich"
       }
+    },
+    {
+      "name": "tailscale-cli",
+      "source": "./plugins/tailscale-cli",
+      "description": "Use of the tailscale cli",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
     }
   ]
 }

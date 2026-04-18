@@ -1,0 +1,8 @@
+{
+  "name": "tailscale-cli",
+  "version": "0.1.0",
+  "description": "Usage of the tailscale cli",
+  "author": {
+    "name": "Geoffrey Rich"
+  }
+}
