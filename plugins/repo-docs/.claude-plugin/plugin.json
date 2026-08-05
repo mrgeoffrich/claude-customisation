@@ -1,7 +1,7 @@
 {
   "name": "repo-docs",
-  "version": "0.1.0",
-  "description": "Set up and maintain the core repository documents: CLAUDE.md, ARCHITECTURE.md, TESTING.md and RELEASE.md",
+  "version": "0.3.0",
+  "description": "Set up and maintain the core repository documents: CLAUDE.md, ARCHITECTURE.md, TESTING.md, RELEASE.md and HOSTING.md",
   "author": {
     "name": "Geoffrey Rich"
   }

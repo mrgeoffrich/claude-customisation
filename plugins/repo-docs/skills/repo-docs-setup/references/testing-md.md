@@ -68,14 +68,18 @@ cheapest-first so failures surface fast, with the expected outcome stated.>
 
 1. `<typecheck>` — no errors
 2. `<lint>` — clean
-3. `<unit tests>` — all pass, takes about <N>s
+3. `<unit tests>` — all pass, seconds
 4. `<targeted integration tests for the area you touched>`
 
 <Then the manual checks, if any: the specific journeys worth clicking through, and
 what "working" looks like for each.>
 
 <For a broad or risky change, say what escalates to the full suite: `<cmd>`,
-about <N> minutes.>
+several minutes.>
+
+<Give durations as orders of magnitude — "seconds", "a couple of minutes",
+"the better part of an hour". That's what a reader needs to decide whether to run
+it now, and it stays true as the suite grows; "3m12s" is wrong by next month.>
 
 ## Known-awkward tests
 
@@ -105,5 +109,6 @@ aspirational number nobody checks.>
 
 - A tutorial for the test framework — link to upstream docs and spend the space on what's specific to this repo
 - A catalogue of existing test cases — that's the test files
+- Test counts, current coverage percentages, exact suite runtimes — measurements of a moment that no one updates and nothing flags when they drift. The runner reports the count; the config file holds the threshold; say "seconds" or "minutes" instead of a stopwatch reading. A configured, enforced threshold is different — that's a decision, and documenting it under "Coverage" is right
 - Full CI configuration — link to `.github/workflows/test.yml`, don't transcribe it
 - Debugging notes for one historical flake — the issue tracker

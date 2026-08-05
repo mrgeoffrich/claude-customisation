@@ -118,6 +118,7 @@ or channel they publish to, how one gets promoted to stable.>
 ## What does not belong here
 
 - **Secret values** — names and locations only, always
-- **The deployment runbook**, if deploying is separate from releasing — that's `docs/runbooks/` or a skill; conflating "a version exists" with "it's running in production" causes real incidents
+- **Where the software runs and how it's deployed** — `HOSTING.md`. This document ends when a versioned artifact exists and is published; getting that artifact running in an environment is the other file's job. Conflating "a version exists" with "it's running in production" causes real incidents. If publishing and deploying are genuinely one pipeline in this repo, keep the description in one file and link from the other rather than writing it twice
+- **Incident response and on-call procedure** — `docs/runbooks/`; a bad release and an outage are different documents with different readers
 - **Full CI YAML** — link to the workflow file
 - **The changelog itself** — that's `CHANGELOG.md`; this file describes the policy

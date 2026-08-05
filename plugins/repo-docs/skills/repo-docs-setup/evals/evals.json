@@ -21,6 +21,34 @@
       "name": "unwarranted-files-pushback",
       "expected_output": "Pushes back on files the repo doesn't warrant rather than generating plausible-looking stubs: a single-module lib doesn't need ARCHITECTURE.md, and with no tags/registry/publish config there is no release process to document. Offers what would actually help (a good CLAUDE.md, README, and what RELEASE.md would need to contain once a publishing target is chosen). Does not fabricate a PyPI release process the repo has no evidence of. Still does the work if the user reaffirms.",
       "files": []
+    },
+    {
+      "id": 3,
+      "name": "stale-values-and-history-cleanup",
+      "prompt": "our CLAUDE.md says stuff like '134 tests, 87% coverage' and there's a whole section about migrating off webpack last year. half of it isn't true anymore. can you go through it",
+      "expected_output": "Checks each number against the repo rather than refreshing it to today's value. Test counts, coverage percentages, LOC and package counts are deleted or restated qualitatively; a threshold that CI actually enforces is kept but cited to its config file rather than copied. The webpack migration section is rewritten in the present tense (\"Vite is the bundler\") or dropped where the config already makes it obvious, and relative time words (recently, currently, as of) are removed. History that still constrains today's work is preserved, rephrased as a live constraint and moved to ARCHITECTURE.md gotchas rather than deleted. Explains that the removed history remains in git log and CHANGELOG.md.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "push-per-package-content-down",
+      "prompt": "root CLAUDE.md in our monorepo has a section for every single app - the api's env vars, the web app's next.js routing rules, the worker's queue setup. it's enormous and 90% of it is irrelevant to whatever i'm actually working on. sort it",
+      "expected_output": "Identifies the project boundaries from workspace config rather than guessing, then proposes a per-project CLAUDE.md for each real project (something with its own build/test/deployable), not one per folder. Per-app env vars, framework conventions and commands move down into apps/<name>/CLAUDE.md; genuinely cross-cutting content stays at the root, including how to scope a command to one package. Explains the loading model correctly — nested files load on demand when Claude works in that directory, and at launch for a session started inside it — rather than claiming @-imports would help. Child files don't restate what the root already covers. Suggests .claude/rules/ with paths: frontmatter where the content is a rule about files rather than orientation for a directory. Confirms the move list before writing.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "hosting-doc-from-evidence",
+      "prompt": "new person starts next week and nobody but me knows how any of this gets to prod. can you write down where everything's hosted and how we deploy it",
+      "expected_output": "Surveys hosting evidence before writing — platform config, IaC, container/orchestration files, and especially the deploy jobs in CI and their environment keys — and creates HOSTING.md from what the repo actually demonstrates. States the deploy trigger unambiguously (merge to main / tag push / manual dispatch) and whether an approval gate exists. Covers environments and their URLs, what runs where, how infrastructure is provisioned, whether migrations are automatic or a separate step, rollback, and where logs and dashboards live. Names env vars and secrets by name only, never values, and does not write cloud account IDs, ARNs or internal hostnames. Anything it could not determine — particularly infra that lives in another repo or only in a dashboard — is marked with a visible TODO blockquote and raised with the user, rather than inferred from the presence of a Dockerfile. Does not duplicate RELEASE.md content.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "hosting-vs-release-boundary",
+      "prompt": "we're a vercel app, merge to main and it's live, that's it. there's no versioning or tags or anything. should i have a RELEASE.md?",
+      "expected_output": "Answers no rather than generating a plausible RELEASE.md: with no tags, no registry and no versioning, there is no release process to document, and merging is the whole ceremony. Explains the distinction — a release makes a version exist, hosting is where it runs and how it gets there — and proposes HOSTING.md as the file this repo actually warrants. Does not invent a semver or tagging scheme to justify the file. Notes that Vercel holds config the repo does not, so parts of HOSTING.md will need confirming from the dashboard. Still does the work if the user reaffirms wanting a RELEASE.md.",
+      "files": []
     }
   ]
 }

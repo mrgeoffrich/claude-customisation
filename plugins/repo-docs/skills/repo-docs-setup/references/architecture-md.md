@@ -84,6 +84,8 @@ debugging session, so include the *why* — a gotcha without a reason gets
 "cleaned up" by the next person.>
 ```
 
+This is the right home for history that still constrains today's work, and the wrong home for history that merely happened. A gotcha is phrased as a live constraint with its reason attached — "don't reorder the middleware; the session cookie must be set before the CSRF check reads it" — not as an event: "we hit a CSRF bug in the v2 migration". If the sentence doesn't change what someone does now, it's a changelog entry or an ADR, not a gotcha.
+
 Drop sections with nothing real in them. Most repos won't have all of these.
 
 ## Monorepos
@@ -116,3 +118,5 @@ Keep it to the coarse-grained picture. A diagram that needs updating on every PR
 - **Decision history and rejected alternatives** — those are ADRs (`docs/adr/NNNN-title.md`). Architecture describes the current state; an ADR records a dated decision and can be superseded without rewriting anything else.
 - **Roadmap and aspirational architecture** — a reader can't tell aspiration from description, so mixing them makes the whole document untrustworthy. If you must, mark it unmistakably under its own heading.
 - **Line numbers, exact file links, function signatures** — stale on arrival.
+- **Counts and sizes** — "12 services", "~8k lines", "3 database tables". The shape of the system is the point; the tally changes with every merge and nothing catches it when it does. Name the pieces that matter instead of counting them.
+- **Where it's hosted and how it's deployed** — `HOSTING.md`. This document says what the components are and how they relate; the environments they run in and how code reaches them is a separate concern that changes on a different schedule. A deployment-topology diagram is the honest exception: if one is worth drawing, it belongs here with the other diagrams, and `HOSTING.md` links to it.

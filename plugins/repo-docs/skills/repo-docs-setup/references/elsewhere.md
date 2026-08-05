@@ -1,4 +1,4 @@
-# Where content goes when it belongs in none of the four
+# Where content goes when it belongs in none of the five
 
 Most of the work of tidying repo documentation is deciding what to *remove*. These are the destinations, roughly in order of how often they come up.
 
@@ -65,7 +65,9 @@ Rule of thumb: if you're writing numbered steps into `CLAUDE.md`, it wants to be
 
 ## `docs/runbooks/*.md`
 
-Operational procedures for running systems: incident response, on-call playbooks, scaling, backup and restore, deploy-to-production when that's distinct from cutting a release. Different audience and different urgency from everything else here, and worth keeping separate for that reason alone.
+Operational procedures for running systems: incident response, on-call playbooks, scaling, backup and restore. Different audience and different urgency from everything else here, and worth keeping separate for that reason alone.
+
+The boundary with `HOSTING.md` is routine versus emergency. A deploy is routine and belongs in `HOSTING.md`, along with the rollback that follows a bad one; diagnosing an outage at 3am is a runbook. If a procedure runs to numbered steps someone follows under pressure, it wants a runbook or a skill, linked from `HOSTING.md`.
 
 ## Module-level `README.md`
 
