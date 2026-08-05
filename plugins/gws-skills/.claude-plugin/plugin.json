@@ -1,7 +1,7 @@
 {
   "name": "gws-skills",
-  "version": "0.1.0",
-  "description": "Google Workspace skills for Gmail, Drive, Calendar, and more",
+  "version": "0.2.0",
+  "description": "Google Workspace skills for Gmail and Calendar: reference skills vendored from the gws CLI, plus a markdown-aware Gmail composer",
   "author": {
     "name": "Geoffrey Rich"
   },

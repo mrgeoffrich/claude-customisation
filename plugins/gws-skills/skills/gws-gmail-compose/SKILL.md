@@ -1,14 +1,14 @@
 ---
 name: gws-gmail-compose
 version: 1.1.0
-description: "This skill should be used whenever composing, sending, replying to, forwarding, or saving a Gmail message as a draft. Triggers include: 'send an email', 'reply to that message', 'forward this to X', 'draft a message for me', 'write an email to...'. Handles plain-text .eml files and markdown .md files with automatic base64 encoding — no manual encoding required."
+description: "This skill should be used whenever composing, sending, replying to, forwarding, or saving a Gmail message as a draft. Triggers include: 'send an email', 'reply to that message', 'forward this to X', 'draft a message for me', 'write an email to...'. Handles plain-text .eml files and markdown .md files with automatic base64 encoding — no manual encoding required. Prefer this over gws-gmail-send, gws-gmail-reply, gws-gmail-reply-all and gws-gmail-forward, which require hand-building and base64url-encoding an RFC 2822 message; use those only for raw API access."
 metadata:
   openclaw:
     category: "productivity"
     requires:
       bins: ["gws", "python3"]
       pip: ["markdown"]
-    cliHelp: "python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py --help"
+    cliHelp: "python ${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py --help"
 ---
 
 # gws-gmail-compose
@@ -17,10 +17,10 @@ metadata:
 
 > **Use this instead of the raw `gws gmail` send command** whenever composing, replying, forwarding, or editing an email. The raw API requires manually base64url-encoding an RFC 2822 message — this script does all of that automatically.
 
-The script is bundled at `.claude/skills/gws-gmail-compose/scripts/gmail-compose.py`. All commands below assume the **repo root as the working directory** (which is the Claude Code default).
+The script is bundled at `${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py`. That form resolves in both install modes: `CLAUDE_PLUGIN_ROOT` is set when this runs as a plugin, and it falls back to `.claude` for a repo-local `.claude/skills/` install (which assumes the **repo root as the working directory** — the Claude Code default). Keep the quotes when invoking it.
 
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py <command> [flags]
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" <command> [flags]
 ```
 
 ---
@@ -60,7 +60,7 @@ This is a **markdown** email with a [link](https://example.com).
 Send it:
 
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py send --file /tmp/my-draft.md
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" send --file /tmp/my-draft.md
 ```
 
 The script builds a `multipart/alternative` message with the original markdown as `text/plain` and styled HTML as `text/html`, plus an `X-Claude-Markdown: 1` header for round-trip detection.
@@ -91,7 +91,7 @@ More body text.
 Send it:
 
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py send --file /tmp/my-draft.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" send --file /tmp/my-draft.eml
 ```
 
 ---
@@ -109,10 +109,10 @@ Thanks for the update, I'll review it today.
 
 ```bash
 # Reply to sender only
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py reply <message_id> --file /tmp/reply.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" reply <message_id> --file /tmp/reply.eml
 
 # Reply-all (original To/Cc added to Cc automatically)
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py reply-all <message_id> --file /tmp/reply.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" reply-all <message_id> --file /tmp/reply.eml
 ```
 
 You can override any auto-populated header by including it in the draft file explicitly (e.g. add `To: override@example.com`).
@@ -125,10 +125,10 @@ Use `draft` to save a local file to Gmail as a draft without sending it:
 
 ```bash
 # Create a new Gmail draft (prints draft ID and message ID)
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py draft --file /tmp/my-draft.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" draft --file /tmp/my-draft.eml
 
 # Update an existing draft in-place (use draft ID from drafts list)
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py draft --file /tmp/my-draft.eml --draft-id r2112529864235412017
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" draft --file /tmp/my-draft.eml --draft-id r2112529864235412017
 ```
 
 To find existing draft IDs:
@@ -146,10 +146,10 @@ Use `fetch` to pull a message down for inspection or to use as a base for editin
 
 ```bash
 # Writes to /tmp/gmail-<id>.eml and prints the path
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py fetch <message_id>
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" fetch <message_id>
 
 # Save to a specific path
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py fetch <message_id> --output /tmp/original.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" fetch <message_id> --output /tmp/original.eml
 ```
 
 The output file contains decoded headers and plain-text body — human-readable, no base64.
@@ -162,13 +162,13 @@ The output file contains decoded headers and plain-text body — human-readable,
 
 ```bash
 # Creates /tmp/gmail-fwd-<id>.eml with forwarded block pre-populated, prints path
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py forward <message_id> --to recipient@example.com
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" forward <message_id> --to recipient@example.com
 ```
 
 Edit the file to add an intro, then send:
 
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py forward <message_id> --to recipient@example.com --file /tmp/gmail-fwd-<id>.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" forward <message_id> --to recipient@example.com --file /tmp/gmail-fwd-<id>.eml
 ```
 
 ---
@@ -189,12 +189,12 @@ Cheers
 
 Step 2 — send it:
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py reply <message_id> --file /tmp/reply.eml
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" reply <message_id> --file /tmp/reply.eml
 ```
 
 Use `fetch` first if you need to see the original message before composing:
 ```bash
-python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py fetch <message_id>
+python "${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/scripts/gmail-compose.py" fetch <message_id>
 # then Read the output file to inspect it
 ```
 
@@ -202,11 +202,11 @@ python .claude/skills/gws-gmail-compose/scripts/gmail-compose.py fetch <message_
 
 ## Styling markdown emails
 
-Default styles are in `.claude/skills/gws-gmail-compose/email-styles.yaml`. To customise without touching the committed file, copy it to `email-styles.local.yaml` (gitignored) and edit that:
+Default styles are in `${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/email-styles.yaml`. To customise without touching the committed file, copy it to `email-styles.local.yaml` (gitignored) and edit that:
 
 ```bash
-cp .claude/skills/gws-gmail-compose/email-styles.yaml \
-   .claude/skills/gws-gmail-compose/email-styles.local.yaml
+cp ${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/email-styles.yaml \
+   ${CLAUDE_PLUGIN_ROOT:-.claude}/skills/gws-gmail-compose/email-styles.local.yaml
 ```
 
 Available style keys (all standard CSS values):
