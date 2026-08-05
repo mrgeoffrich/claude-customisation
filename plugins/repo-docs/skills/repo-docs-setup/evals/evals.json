@@ -1,0 +1,26 @@
+{
+  "skill_name": "repo-docs-setup",
+  "evals": [
+    {
+      "id": 0,
+      "name": "monorepo-greenfield",
+      "prompt": "This monorepo has basically no docs and two new people start on Monday. Can you set up whatever markdown files make sense so they (and Claude) can find their way around — how it's laid out, how to run the tests, how we ship it.",
+      "expected_output": "Surveys the repo first, proposes which of the four files are warranted with reasons, confirms with the user, then writes them. ARCHITECTURE.md has a real codemap derived from actual package paths. TESTING.md has a concrete smoke-test sequence. RELEASE.md matches the actual release automation found in CI. CLAUDE.md is short and links to the others with plain markdown links, not @-imports. Unknowns are marked TODO rather than invented.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "prompt": "our CLAUDE.md is like 600 lines now and honestly claude just seems to ignore half of it. everything's in there - the whole folder structure, our testing setup, the deploy steps, a big section on code style. can you sort it out",
+      "name": "bloated-claude-md-refactor",
+      "expected_output": "Reads the existing CLAUDE.md and classifies every section. Proposes a specific move list before editing. Directory tree and dependency lists are deleted (derivable). Architecture content moves to ARCHITECTURE.md, testing content to TESTING.md, deploy/release steps to RELEASE.md or a skill. Style rules already enforced by a formatter are cut to one line. Result is well under 200 lines with plain links to the new files. Nothing is silently discarded.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "small python lib i wrote, single module, pytest, never published it anywhere. want to add an ARCHITECTURE.md and a RELEASE.md so it looks legit before i open source it",
+      "name": "unwarranted-files-pushback",
+      "expected_output": "Pushes back on files the repo doesn't warrant rather than generating plausible-looking stubs: a single-module lib doesn't need ARCHITECTURE.md, and with no tags/registry/publish config there is no release process to document. Offers what would actually help (a good CLAUDE.md, README, and what RELEASE.md would need to contain once a publishing target is chosen). Does not fabricate a PyPI release process the repo has no evidence of. Still does the work if the user reaffirms.",
+      "files": []
+    }
+  ]
+}

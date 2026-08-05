@@ -33,7 +33,7 @@ The YAML frontmatter controls how and when a skill is invoked:
 - `hooks` — shell commands that run on lifecycle events (e.g. `SessionStart` to set up a Python venv)
 - `version`, `metadata` — optional; metadata supports `openclaw` fields like `category` and `requires`
 
-## The five plugins
+## The seven plugins
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
@@ -41,7 +41,9 @@ The YAML frontmatter controls how and when a skill is invoked:
 | `web-dev` | `nextjs-starter` | Scaffolds Next.js + shadcn/ui + Tailwind v4 + Prisma v7 |
 | `gws-skills` | `gws-gmail-compose` | Compose/reply/forward Gmail via `.eml` or `.md` draft files |
 | `dev-setup` | `cli-tips`, `statusline` | CLI tool recommendations; statusline install/update |
-| `sandbox` | `sandbox-launch` | Docker sandbox launcher for safe `--dangerously-skip-permissions` usage |
+| `tailscale-cli` | `tailscale` | Usage of the Tailscale CLI |
+| `worktrees` | `worktree-prep` | Prepares a repo for parallel worktrees; audits shared resources, generates a per-worktree env tool, and installs `worktree-create` / `worktree-remove` skills into the target repo |
+| `repo-docs` | `repo-docs-setup` | Sets up CLAUDE.md / ARCHITECTURE.md / TESTING.md / RELEASE.md; routes content to the right file and extracts bloat from existing CLAUDE.md |
 
 ## Marketplace distribution
 
@@ -69,10 +71,6 @@ Use the project `.venv` for running Python tests:
 - **All scripts must be written in Python 3** (stdlib only where possible) — no Bash scripts
 - Scripts must work **cross-platform** (macOS, Linux, Windows) — use `pathlib`, `os.path`, and `platform` instead of platform-specific commands or paths
 - Avoid shell-isms like `~`, `$HOME`, or hardcoded `/usr/bin` paths — use `Path.home()`, `os.environ`, and `shutil.which()`
-
-## Docker Sandbox reference docs
-
-`docker-sandbox-docs/` contains reference documentation for Docker Desktop Sandboxes (architecture, CLI, networking, templates, troubleshooting). Consult these when working on the `sandbox` plugin or its `sandbox-launch` skill.
 
 ## Skill quality standards
 

@@ -51,6 +51,24 @@
       "author": {
         "name": "Geoffrey Rich"
       }
+    },
+    {
+      "name": "worktrees",
+      "source": "./plugins/worktrees",
+      "description": "Prepare a repository for isolated parallel development with git worktrees",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
+    },
+    {
+      "name": "repo-docs",
+      "source": "./plugins/repo-docs",
+      "description": "Set up and maintain the core repository documents: CLAUDE.md, ARCHITECTURE.md, TESTING.md and RELEASE.md",
+      "version": "0.1.0",
+      "author": {
+        "name": "Geoffrey Rich"
+      }
     }
   ]
 }

@@ -1,0 +1,93 @@
+{
+  "skill_name": "worktree-prep",
+  "notes": "Fixtures are real single-commit git repos. Iteration 1 ran these against copies at worktree-prep-workspace/fixtures/ and scored with_skill 0.987 vs without_skill 0.793 (n=1 per cell). Assertions below are revised from iteration 1: all six graders reported that the original set measured inventory ('was resource X isolated') and barely measured mechanism, so a naive max(slot)+1 allocator would have scored full marks while handing two simultaneous agents the same slot. The MECHANISM assertions exist to close that gap and are the ones worth watching. Known setup defect: fixtures must live OUTSIDE claude-customisation, whose CLAUDE.md mandates Python 3 for scripts and contaminates the 'tool matches the host stack' assertion.",
+  "shared_assertions": {
+    "note": "Applied to every eval in addition to its own list.",
+    "mechanism": [
+      "Slot allocation is concurrency-safe: the registry is re-read inside a lock immediately before choosing a slot, and written via temp-file-plus-atomic-rename",
+      "Two simultaneous start runs receive different slots (verified by running them concurrently, not by inspecting the code)",
+      "Port bands do not overlap each other, sit below the OS ephemeral range, and do not collide with the repo's own legacy default ports",
+      "A worktree with no descriptor fails loudly rather than silently falling back to the main checkout's ports and state",
+      "Teardown destroys the resources it reports destroying, and its command lines name no path inside the worktree directory",
+      "Teardown does not swallow non-zero exits: a failed step is reported and the registry entry survives so a re-run can finish"
+    ],
+    "structure": [
+      "An environment tool exists with start, list, delete and doctor commands, written in the repo's own language",
+      "start supports a --dry-run that prints the allocation without writing the registry or creating anything",
+      "The registry is host-global (outside any worktree) and keyed on the worktree directory name rather than the branch",
+      "Slot 0 maps to the repo's existing default ports and names, so a checkout that never uses worktrees is unaffected",
+      "A machine-readable descriptor is written at the worktree root recording every allocated value",
+      "The worktree directory and the descriptor are added to .gitignore, without duplicating entries that already exist",
+      "Two skills are installed into the repo's .claude/skills/ — worktree-create and worktree-remove — each at its own SKILL.md, covering creation and teardown including the release-before-remove ordering",
+      "Neither installed skill contains an unfilled {{PLACEHOLDER}} marker, and both name this repo's actual environment command rather than a generic placeholder",
+      "Each installed skill's description carries concrete trigger phrases, so a later session routes to it instead of hand-rolling a git worktree command that skips environment teardown",
+      "Repo documentation explains the workflow, the allocation, and what remains shared",
+      "The report distinguishes checks actually executed from checks only reasoned about, and names what remains unverified"
+    ]
+  },
+  "evals": [
+    {
+      "id": 0,
+      "name": "containerised-node-monorepo",
+      "fixture": "taskly",
+      "prompt": "we've got two people working on taskly at once now and it's a nightmare. second person to run docker compose up gets 'container name taskly-postgres already in use', and if they get past that the api can't bind 3000. can you set the repo up properly so each git worktree gets its own everything - ports, containers, db, the lot?",
+      "expected_output": "Slot-based allocation over all eight compose host ports plus api 3000 and vite 5173; container_name entries deleted in favour of COMPOSE_PROJECT_NAME; fixed volume and network names removed; dev and test databases isolated; ~/.taskly/uploads relocated; playwright, vite and the e2e spec reading the descriptor; wiring, docs and companion skills.",
+      "assertions": [
+        "Every container_name: entry is removed from docker-compose.yml rather than made unique, so Compose's own project namespacing is what isolates containers",
+        "COMPOSE_PROJECT_NAME is set per worktree, namespacing containers, volumes and networks together",
+        "The fixed volume names (taskly-pgdata, taskly-minio) and network name (taskly-net) no longer force a single global name",
+        "All eight compose host ports are per-worktree: postgres 5432, redis 6379, minio 9000 and 9001, mailhog 1025 and 8025",
+        "The api port 3000 and the vite port 5173 are per-worktree",
+        "Both the dev database taskly_dev and the test database taskly_test are separated per worktree, by whatever mechanism",
+        "playwright.config.ts no longer hardcodes http://localhost:5173",
+        "The reuseExistingServer hazard is addressed: a second worktree's e2e run cannot silently attach to the first worktree's dev server and pass against the wrong branch",
+        "vite.config.ts's server port and its proxy target both come from the descriptor",
+        "The uploads path ~/.taskly/uploads is relocated per worktree",
+        "A bare docker compose up with no descriptor still works in a fresh clone, via :- defaults or an equivalent",
+        "The pnpm store and Docker base images are deliberately left shared, and named as such"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "go-cli-home-directory-state",
+      "fixture": "notecli",
+      "prompt": "i want to run a few claude sessions on notecli in parallel using worktrees. problem is it keeps everything at ~/.notecli - the db, the search index, the lock file - and the daemon drops a socket and pidfile in /tmp, so they'd all stomp each other. get the repo ready for that, each worktree needs to be properly isolated.",
+      "expected_output": "A Go environment tool; port 8080 slot-offset; the whole ~/.notecli state set relocated per worktree; the /tmp socket and pidfile made unique within the sun_path limit; store.go and daemon.go reading the descriptor; the destructive store_test.go fixed.",
+      "assertions": [
+        "The environment tool is written in Go, not Python or Bash (NOTE: contaminated if fixtures sit inside claude-customisation — see notes)",
+        "The web UI port 8080 is per-worktree",
+        "All four ~/.notecli state paths are per-worktree — notes.db, search.bleve, notecli.lock, and the directory itself — verified as four distinct values across two worktrees rather than assumed from one design statement",
+        "The daemon socket and pidfile in /tmp are per-worktree unique",
+        "Generated unix socket paths stay under the 104-byte sun_path limit even for a long worktree path, with a stated fallback when they would not",
+        "store.go and daemon.go resolve their paths from the descriptor rather than package-level constants",
+        "store_test.go no longer opens the real shared database and runs DELETE FROM notes against it",
+        "The Makefile's hardcoded 127.0.0.1:8080 and its rm -f /tmp/notecli.* clean target are updated",
+        "The Go module cache is left shared rather than redirected per worktree",
+        "The repo still builds and its tests still pass after the changes, or the report says explicitly which packages could not be verified and why"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "python-svc-with-unisolatable-resource",
+      "fixture": "metrics-svc",
+      "prompt": "get metrics-svc ready for worktrees please, i'll be running maybe 3-4 branches at a time. one thing - we've only got the one dev S3 bucket and platform won't give us more, so nothing i can do about that.",
+      "expected_output": "A Python environment tool; ports 8000, 9090 and 6379 slot-offset; the redis container named per-slug; the /tmp worker lock made unique; ./rollups.db recognised as already isolated; a defensible and stated decision about the cache; and the S3 bucket recorded as unavoidably shared somewhere a future session will see it.",
+      "assertions": [
+        "The API port 8000, the prometheus exporter port 9090, and the redis port 6379 are per-worktree",
+        "The redis keyspace is separated per worktree, by whatever mechanism (separate container, separate port, or separate logical DB index)",
+        "The `docker run --name metrics-redis` collision is resolved rather than left to fail",
+        "The worker lock at /tmp/metrics-svc-rollup.lock is per-worktree unique",
+        "The rollup store ./rollups.db is recognised as already isolated because it lives inside the worktree, and is not needlessly relocated",
+        "A deliberate, stated decision is made about ~/.cache/metrics-svc in either direction, with reasoning — isolating it because a branch changing the rollup shape would poison other checkouts is as valid as sharing it because it rebuilds from S3",
+        "The shared dev S3 bucket is explicitly recorded as a resource that cannot be isolated, not silently ignored and not falsely presented as isolated",
+        "The consequence of the shared bucket is spelled out concretely: writes from any worktree are visible to the whole team",
+        "If a per-worktree S3 key prefix is introduced, it is disclaimed as a convention inside a shared bucket rather than allowed to read as isolation",
+        "The record of the shared bucket lives where a future session will see it — the descriptor and the repo docs — not only in the chat reply",
+        "The launchd plist label com.acme.metrics-svc.worker is made per-worktree, since one label per machine cannot serve several",
+        "config.py resolves its values from the descriptor rather than keeping hardcoded defaults as the only source",
+        "The tests' hardcoded 127.0.0.1:8000 and 127.0.0.1:9090 are addressed, so a test run in one worktree cannot pass against another worktree's server",
+        "The stated ceiling on concurrent worktrees comfortably covers the 3-4 the user asked for"
+      ]
+    }
+  ]
+}
