@@ -13,16 +13,20 @@ change in flight, and always when running more than one agent against this repo.
 
 ### Creating one
 
+Ask Claude Code for a worktree, or run `git worktree add` yourself. Either way the directory is
+all you get — **the environment is a separate step and it is not automatic.** From inside the new
+worktree:
+
 ```bash
-git worktree add {{WORKTREE_DIR}}/<slug> -b {{BRANCH_PREFIX}}<slug>
 cd {{WORKTREE_DIR}}/<slug>
 {{INSTALL_COMMAND}}
 {{ENV_COMMAND}} start --description "<what this worktree is for>"
 ```
 
-Or run `/worktree-create <slug>`, which does all four steps in order with pre-flight checks.
-Prefer it — the ordering matters, and `{{ENV_COMMAND}} start` before `{{INSTALL_COMMAND}}` or
-outside the worktree does not do what it looks like it does.
+The order matters. `{{ENV_COMMAND}} start` before `{{INSTALL_COMMAND}}`, or run from the main
+checkout instead of the worktree, does not do what it looks like it does. Until `start` has run,
+the worktree shares the main checkout's ports and state, which is the problem worktrees were
+supposed to solve.
 
 ### What is isolated
 
@@ -65,15 +69,22 @@ in the main checkout.
 
 ### Finishing
 
+Release the environment **before** the worktree directory goes away:
+
 ```bash
 cd <repo-root>
 {{ENV_COMMAND}} delete <slug>
 git worktree remove {{WORKTREE_DIR}}/<slug>
 ```
 
-Or `/worktree-remove <slug>`, which checks for unpushed work first. Both commands are needed,
-in that order — removing only the directory leaks containers and holds the slot. The remote
-branch is left alone so any open PR stays valid.
+Both are needed, in that order. Removing only the directory leaks containers and holds the slot,
+and nothing complains until the bands run out. Check for uncommitted and unpushed work first —
+`git worktree remove` refuses on a dirty tree, and that refusal is signal rather than an
+obstacle, so do not reach for `--force`. The remote branch is left alone so any open PR stays
+valid.
+
+If Claude Code removed the worktree for you, `{{ENV_COMMAND}} delete <slug>` still has to be run
+afterwards, and `{{ENV_COMMAND}} doctor` will show the orphaned entry until it is.
 
 ### Notes
 
@@ -83,3 +94,8 @@ branch is left alone so any open PR stays valid.
   artifacts. `{{INSTALL_COMMAND}}` first, before anything else.
 - The ceiling is {{MAX_WORKTREES}} concurrent worktrees; `{{ENV_COMMAND}} start` errors clearly
   when the bands are exhausted.
+- If creating a worktree prints a notice suggesting `/worktree-onboarding`, **decline it.** That
+  notice comes from worktree-manager's machine-wide hook, which does not recognise this repo
+  because there is no `wt.yaml` here. This repo has its own environment tool — `{{ENV_COMMAND}}` —
+  and adopting it into worktree-manager as well would give it two allocators handing out the same
+  ports.
