@@ -6,17 +6,16 @@ description: >
   every resource that concurrent worktrees would fight over — host ports, Docker container/volume/network
   names, databases and state files under $HOME, sockets, lockfiles, OS daemons, external namespaces —
   then designs a slot-based allocation scheme, generates a per-worktree environment tool written in the
-  repo's own stack, wires it into the repo's entrypoints and agent docs, installs a matching pair of
-  worktree-create and worktree-remove skills into the repo so the tool gets invoked at the right points
-  in the lifecycle, and proves it by running two
-  worktrees side by side. Use this skill whenever the user talks about worktrees together with setup,
+  repo's own stack, wires it into the repo's entrypoints and agent docs so a worktree created by Claude
+  Code's WorktreeCreate hook gets its environment started at the right point, and proves it by running
+  two worktrees side by side. Use this skill whenever the user talks about worktrees together with setup,
   isolation, clashing, or parallelism — including "make this repo work with worktrees", "get this repo
   ready for worktrees", "my worktrees fight over port 3000", "set up isolated dev environments per
   branch", "I want to run several Claude sessions on this repo at once", "each worktree needs its own
   database", "add worktree support", or "why do my parallel agents keep breaking each other". Also use
   it when someone hits EADDRINUSE, "container name already in use", or unexplained state bleeding
   between branches while running more than one checkout. Do not use it to create a single worktree in a
-  repo that has already been prepared — the generated worktree-create skill covers that.
+  repo that has already been prepared — Claude Code's WorktreeCreate hook covers that.
 ---
 
 # Worktree Prep
@@ -240,37 +239,52 @@ value gets reintroduced six months later.
 `AGENTS.md` (adapting the placeholders), so future sessions in this repo know the workflow
 exists, know the allocation is per-worktree, and know what is still shared.
 
-**5. Install the two lifecycle skills.** The environment tool has a correct order of
+**5. Say where the environment step happens.** The environment tool has a correct order of
 operations that nobody remembers under time pressure: `start` runs *after* the install step and
-*inside* the new worktree; `delete` runs *before* `git worktree remove` and *from the repo
-root*. Get either backwards and you leak a slot, leak containers, or bring a worktree up on the
-main checkout's ports. Both skills exist to encode that ordering so it happens without anyone
-having to recall it.
+*inside* the new worktree; `delete` runs *before* the worktree directory goes away. Get either
+backwards and you leak a slot, leak containers, or bring a worktree up on the main checkout's
+ports.
 
-Install both from `assets/` into the target repo's `.claude/skills/`:
+That ordering belongs in the repo's docs (step 4 above), not in a skill. Creating a worktree is
+not the repo's decision to make. Claude Code has `WorktreeCreate` and `WorktreeRemove` hooks, and
+where one is registered Claude Code delegates creation to it and never falls back to `git worktree
+add`. `wt claude install` registers one machine-wide, covering every repository on the machine. A
+skill that described a `git worktree add` of its own would be describing something that never
+runs.
 
-- `assets/worktree-create-SKILL.md` → `.claude/skills/worktree-create/SKILL.md`
-- `assets/worktree-remove-SKILL.md` → `.claude/skills/worktree-remove/SKILL.md`
+So write the docs for a worktree that the hook has already created. State two things explicitly:
 
-They are templates carrying `{{PLACEHOLDER}}` markers — `{{PROJECT_NAME}}`,
-`{{DEFAULT_BRANCH}}`, `{{WORKTREE_DIR}}`, `{{BRANCH_PREFIX}}`, `{{ENV_COMMAND}}`,
-`{{INSTALL_STEP}}`, `{{DESCRIPTOR_FILE}}`, `{{ISOLATED_RESOURCES_LIST}}` and friends. Fill every
-one with the real values you chose in Phase 3, delete any section that does not apply to this
-repo, and grep the installed files for `{{` before moving on. A skill shipped with placeholders
-still in it is worse than no skill: it reads as authoritative and instructs the next session to
-run a command that does not exist.
+- **The environment step is not automatic.** The hook creates the directory and stops. Whoever
+  arrives in a fresh worktree runs the install step and `{{ENV_COMMAND}} start` themselves, and
+  until they do the worktree shares the main checkout's ports and state.
+- **Teardown is two things in order.** `{{ENV_COMMAND}} delete <slug>` from the repo root
+  releases the environment; removing the worktree directory is separate and comes second.
+  Removing only the directory leaks containers and holds the slot, and the leak stays invisible
+  until slots run out.
 
-Two things are easy to get wrong here:
+**Do not install a `worktree-create` or `worktree-remove` skill into the repo.** If an earlier run
+of this skill left one at `.claude/skills/worktree-create/` or `.claude/skills/worktree-remove/`,
+say so and offer to delete it. It competes with the hook, and the two have already drifted apart
+on which branch a worktree is cut from and on what happens when the branch already exists.
 
-- **Install into the repo, not the plugin.** These are the target repo's skills — they name that
-  repo's command and paths — so they belong in its `.claude/skills/`, committed alongside it.
-- **Keep the descriptions repo-specific.** The `description` field is the entire routing
-  mechanism; it is what makes a future session reach for `/worktree-remove` instead of
-  hand-rolling a `git worktree remove` that skips the environment teardown. Leave the concrete
-  trigger phrases in, and make sure the summary names this repo's actual command.
+### If the machine has wt's hooks installed
 
-If the repo already has skills covering this ground under other names, say so and ask before
-overwriting rather than installing a second, competing pair.
+Check for them, because the interaction is confusing and worth naming up front:
+
+```bash
+grep -l 'WorktreeCreate' ~/.claude/settings.json ~/.claude/settings.local.json 2>/dev/null
+```
+
+wt's `WorktreeCreate` hook treats a repository as adopted only when there is a `wt.yaml` at its
+root. A repo prepared by *this* skill has no `wt.yaml` — it has this skill's own generated
+environment tool instead — so the hook gives it a plain worktree under `.claude/worktrees/<slug>`,
+starts no environment, and prints a notice suggesting `/worktree-onboarding`.
+
+Both halves of that need to reach the repo's docs. The worktree directory the hook actually uses
+is `.claude/worktrees/<slug>`, so use that as `{{WORKTREE_DIR}}` rather than inventing a second
+location the hook will not honour. And record that the `/worktree-onboarding` suggestion should be
+declined: taking it up adopts the repo into wt, which would give it a second environment tool
+allocating the same ports as the first.
 
 ---
 
@@ -308,8 +322,8 @@ the design is wrong.
 Tell the user what now exists and what the workflow is:
 
 - the command they run, and what a fresh worktree costs in time
-- the two installed skills — `/worktree-create <slug>` and `/worktree-remove <slug>` — as the
-  normal way in and out, with the raw commands as the fallback
+- how a worktree gets made here: Claude Code's `WorktreeCreate` hook creates the directory, and
+  the environment step is theirs to run afterwards — name the two commands and their order
 - the allocation table as built, including the share-on-purpose rows
 - **the cannot-isolate list, restated** — this is the part they need to remember
 - the ceiling: how many concurrent worktrees the bands allow

@@ -18,9 +18,10 @@
       "Slot 0 maps to the repo's existing default ports and names, so a checkout that never uses worktrees is unaffected",
       "A machine-readable descriptor is written at the worktree root recording every allocated value",
       "The worktree directory and the descriptor are added to .gitignore, without duplicating entries that already exist",
-      "Two skills are installed into the repo's .claude/skills/ — worktree-create and worktree-remove — each at its own SKILL.md, covering creation and teardown including the release-before-remove ordering",
-      "Neither installed skill contains an unfilled {{PLACEHOLDER}} marker, and both name this repo's actual environment command rather than a generic placeholder",
-      "Each installed skill's description carries concrete trigger phrases, so a later session routes to it instead of hand-rolling a git worktree command that skips environment teardown",
+      "No worktree-create or worktree-remove skill is installed into the repo's .claude/skills/ — worktree creation is Claude Code's WorktreeCreate hook's job, and a skill describing its own git worktree add would describe something that never runs",
+      "The repo documentation says the environment step is not automatic: the hook creates the directory and someone still has to run the install step and the env tool's start inside it",
+      "The repo documentation gives the teardown ordering — release the environment before the worktree directory goes away — and says removing only the directory leaks containers and holds the slot",
+      "No file written into the repo contains an unfilled {{PLACEHOLDER}} marker, and each names this repo's actual environment command rather than a generic placeholder",
       "Repo documentation explains the workflow, the allocation, and what remains shared",
       "The report distinguishes checks actually executed from checks only reasoned about, and names what remains unverified"
     ]
@@ -31,7 +32,7 @@
       "name": "containerised-node-monorepo",
       "fixture": "taskly",
       "prompt": "we've got two people working on taskly at once now and it's a nightmare. second person to run docker compose up gets 'container name taskly-postgres already in use', and if they get past that the api can't bind 3000. can you set the repo up properly so each git worktree gets its own everything - ports, containers, db, the lot?",
-      "expected_output": "Slot-based allocation over all eight compose host ports plus api 3000 and vite 5173; container_name entries deleted in favour of COMPOSE_PROJECT_NAME; fixed volume and network names removed; dev and test databases isolated; ~/.taskly/uploads relocated; playwright, vite and the e2e spec reading the descriptor; wiring, docs and companion skills.",
+      "expected_output": "Slot-based allocation over all eight compose host ports plus api 3000 and vite 5173; container_name entries deleted in favour of COMPOSE_PROJECT_NAME; fixed volume and network names removed; dev and test databases isolated; ~/.taskly/uploads relocated; playwright, vite and the e2e spec reading the descriptor; wiring and docs.",
       "assertions": [
         "Every container_name: entry is removed from docker-compose.yml rather than made unique, so Compose's own project namespacing is what isolates containers",
         "COMPOSE_PROJECT_NAME is set per worktree, namespacing containers, volumes and networks together",
